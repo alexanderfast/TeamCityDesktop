@@ -1,0 +1,18 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:Converters="clr-namespace:TeamCityDesktop.Converters">
+
+	<Converters:BoolToVisibility x:Key="VisibleIfTrue"
+	                             OnTrue="Visible"
+	                             OnFalse="Collapsed" />
+	<Converters:BoolToVisibility x:Key="VisibleIfFalse"
+	                             OnTrue="Collapsed"
+	                             OnFalse="Visible" />
+
+	<Converters:NullToVisibility x:Key="VisibleIfNull"
+	                             OnNull="Visible"
+	                             OnNotNull="Collapsed" />
+	<Converters:NullToVisibility x:Key="VisibleIfNotNull"
+	                             OnNull="Collapsed"
+	                             OnNotNull="Visible" />
+</ResourceDictionary>
