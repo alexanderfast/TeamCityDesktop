@@ -27,10 +27,9 @@ namespace TeamCityDesktop
                 // if no servers have been saved, create some default setting
                 server = new ServerViewModel();
                 settings.Servers.Add(server);
-
-                login.ViewModel.Server.ServerUrl = "localhost:8080";
-                login.ViewModel.Server.Username = "username";
-                login.ViewModel.Server.Password = "password";
+                login.ViewModel.Server = server;
+                login.ViewModel.Server.ServerUrl = "teamcity.codebetter.com";
+                login.ViewModel.Server.Guest = true;
             }
             else
             {
