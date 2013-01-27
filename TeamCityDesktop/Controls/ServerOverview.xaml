@@ -85,9 +85,13 @@
 			<Controls:GifImage Style="{StaticResource LoadingGif}"
 			                   Visibility="{Binding IsLoading, Converter={StaticResource VisibleIfTrue}}" />
 			<ListBox x:Name="ArtifactsListBox"
-			         Visibility="{Binding IsLoading, Converter={StaticResource VisibleIfFalse}}"
+			         Visibility="{Binding Artifacts.Artifacts.IsEmpty, Converter={StaticResource VisibleIfFalse}}"
 			         ItemsSource="{Binding Artifacts.Artifacts}"
 			         SelectionMode="Multiple" />
+			<Label Visibility="{Binding Artifacts.Artifacts.IsEmpty, Converter={StaticResource VisibleIfTrue}}"
+			       Content="No artifacts in this build."
+			       FontWeight="Bold"
+			       Margin="40" />
 			<StackPanel Grid.Row="1"
 			            Margin="2"
 			            Orientation="Vertical">
