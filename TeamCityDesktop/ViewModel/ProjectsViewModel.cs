@@ -1,26 +1,24 @@
-﻿using System;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 
 namespace TeamCityDesktop.ViewModel
 {
-    public class ProjectsViewModel : AsyncCollectionViewModel<ProjectViewModel>, IDisposable
+    public class ProjectsViewModel : AsyncCollectionViewModel<ProjectViewModel>
     {
         public ProjectsViewModel()
         {
             Collection.CollectionChanged += CollectionChanged;
         }
 
-        #region IDisposable Members
-
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            Collection.Clear();
-            Collection.CollectionChanged -= CollectionChanged;
+            if (disposing)
+            {
+                Collection.Clear();
+                Collection.CollectionChanged -= CollectionChanged;
+            }
         }
-
-        #endregion
 
         public override void LoadCollectionAsync()
         {

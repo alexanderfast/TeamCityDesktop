@@ -68,15 +68,14 @@ namespace TeamCityDesktop.ViewModel
                     .Select(x => new BuildConfigViewModel(x))));
         }
 
-        #region IDisposable Members
-
-        public void Dispose()
+        protected override void Dispose(bool disposing)
         {
-            Collection.Clear();
-            Collection.CollectionChanged -= CollectionChanged;
+            if (disposing)
+            {
+                Collection.Clear();
+                Collection.CollectionChanged -= CollectionChanged;
+            }
         }
-
-        #endregion
 
         private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
