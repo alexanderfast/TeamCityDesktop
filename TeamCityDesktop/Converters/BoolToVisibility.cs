@@ -5,7 +5,7 @@ using System.Windows.Data;
 
 namespace TeamCityDesktop.Converters
 {
-    internal class BoolToVisibility : IValueConverter
+    public class BoolToVisibility : IValueConverter
     {
         public Visibility OnTrue { get; set; }
         public Visibility OnFalse { get; set; }

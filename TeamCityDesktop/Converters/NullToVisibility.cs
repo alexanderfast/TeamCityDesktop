@@ -5,7 +5,7 @@ using System.Windows.Data;
 
 namespace TeamCityDesktop.Converters
 {
-    internal class NullToVisibility : IValueConverter
+    public class NullToVisibility : IValueConverter
     {
         public Visibility OnNull { get; set; }
         public Visibility OnNotNull { get; set; }

@@ -3,7 +3,7 @@ using TeamCityDesktop.ViewModel;
 
 namespace TeamCityDesktop.Controls
 {
-    public partial class ServerOverview : UserControl
+    public sealed partial class ServerOverview : UserControl
     {
         public ServerOverview(ServerOverviewViewModel viewModel = null)
         {

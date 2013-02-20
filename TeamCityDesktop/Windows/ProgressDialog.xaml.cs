@@ -4,10 +4,7 @@ using System.Windows;
 
 namespace TeamCityDesktop.Windows
 {
-    /// <summary>
-    /// Interaction logic for ProgressDialog.xaml
-    /// </summary>
-    public partial class ProgressDialog : Window, INotifyPropertyChanged
+    public sealed partial class ProgressDialog : Window, INotifyPropertyChanged
     {
         private readonly BackgroundWorker worker;
         private double progressPercentage;
@@ -81,7 +78,7 @@ namespace TeamCityDesktop.Windows
             UserState = e.UserState;
         }
 
-        protected void OnPropertyChanged(string property)
+        private void OnPropertyChanged(string property)
         {
             if (PropertyChanged != null)
             {

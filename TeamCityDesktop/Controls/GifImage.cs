@@ -80,13 +80,18 @@ namespace TeamCityDesktop.Controls
 
         private static void VisibilityChanged(DependencyObject sender, DependencyPropertyChangedEventArgs e)
         {
+            GifImage gifImage = sender as GifImage;
+            if (gifImage == null)
+            {
+                return;
+            }
             if ((Visibility)e.NewValue == Visibility.Visible)
             {
-                ((GifImage)sender).StartAnimation();
+                gifImage.StartAnimation();
             }
             else
             {
-                ((GifImage)sender).StopAnimation();
+                gifImage.StopAnimation();
             }
         }
 

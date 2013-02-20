@@ -3,7 +3,7 @@ using TeamCityDesktop.Model;
 
 namespace TeamCityDesktop.Controls
 {
-    public partial class Login : UserControl
+    public sealed partial class Login : UserControl
     {
         public Login(ServerCredentialsModel serverCredentials = null)
         {

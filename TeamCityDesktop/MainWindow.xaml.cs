@@ -14,7 +14,7 @@ using Application = System.Windows.Application;
 
 namespace TeamCityDesktop
 {
-    public partial class MainWindow : Window, INotifyPropertyChanged
+    public sealed partial class MainWindow : Window, INotifyPropertyChanged
     {
         private const string ServerFile = "Servers.xml";
         private object activity;
@@ -25,7 +25,7 @@ namespace TeamCityDesktop
             List<ServerCredentialsModel> credentials = null;
             if (File.Exists(ServerFile))
             {
-                credentials = Serializer<List<ServerCredentialsModel>>.Load(ServerFile);
+                credentials = new Serializer<List<ServerCredentialsModel>>().Load(ServerFile);
             }
             if (credentials == null || credentials.Count == 0)
             {
@@ -95,12 +95,14 @@ namespace TeamCityDesktop
             var login = activity as Login;
             if (login != null)
             {
+                var serializer = new Serializer<List<ServerCredentialsModel>>();
+
                 // save the credential info
                 List<ServerCredentialsModel> credentials = File.Exists(ServerFile)
-                    ? Serializer<List<ServerCredentialsModel>>.Load(ServerFile)
+                    ? serializer.Load(ServerFile)
                     : new List<ServerCredentialsModel>();
                 credentials.Add(login.ServerCredentials);
-                Serializer<List<ServerCredentialsModel>>.Save(credentials, ServerFile);
+                serializer.Save(credentials, ServerFile);
 
                 ShowServerOverview(login.ServerCredentials);
             }

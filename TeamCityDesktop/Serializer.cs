@@ -3,9 +3,9 @@ using System.Xml.Serialization;
 
 namespace TeamCityDesktop
 {
-    public static class Serializer<T> where T : class
+    public class Serializer<T> where T : class
     {
-        public static T Load(string path)
+        public T Load(string path)
         {
             if (!File.Exists(path))
             {
@@ -19,7 +19,7 @@ namespace TeamCityDesktop
             }
         }
 
-        public static void Save(T obj, string path)
+        public void Save(T obj, string path)
         {
             CreatePath(path);
             var serializer = new XmlSerializer(typeof(T));

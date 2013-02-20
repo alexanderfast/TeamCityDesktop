@@ -87,7 +87,6 @@
     <Compile Include="ViewModel\ProjectViewModel.cs" />
     <Compile Include="Serializer.cs" />
     <Compile Include="ViewModel\ServerOverviewViewModel.cs" />
-    <Compile Include="ViewModel\ServerViewModel.cs" />
     <Compile Include="Model\ServerCredentialsModel.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />
     <Compile Include="ViewModel\BuildConfigViewModel.cs" />

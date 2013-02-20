@@ -7,6 +7,8 @@ namespace TeamCityDesktop
     /// </summary>
     internal class GenericCache<T> where T : class, new()
     {
+        readonly Serializer<T> serializer = new Serializer<T>();
+
         public GenericCache(string filename = null)
         {
             Filename = filename;
@@ -16,12 +18,12 @@ namespace TeamCityDesktop
 
         public void Save(T data)
         {
-            Serializer<T>.Save(data, Filename);
+            serializer.Save(data, Filename);
         }
 
         public T Load()
         {
-            return File.Exists(Filename) ? Serializer<T>.Load(Filename) : new T();
+            return File.Exists(Filename) ? serializer.Load(Filename) : new T();
         }
     }
 }

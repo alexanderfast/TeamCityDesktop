@@ -20,6 +20,10 @@ namespace TeamCityDesktop.ViewModel
 
         public override void LoadCollectionAsync()
         {
+            if ("N/A".Equals(build.Number))
+            {
+                return;
+            }
             RequestManager.Instance.GetArtifactsInBuildAsync(build,
                 artifacts => DispatcherUpdateCollection(artifacts.Select(x => new ArtifactModel(x))));
         }
