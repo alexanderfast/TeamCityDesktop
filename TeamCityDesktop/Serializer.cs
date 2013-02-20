@@ -1,10 +1,24 @@
 ﻿using System.IO;
 using System.Xml.Serialization;
 
-namespace TeamCityDesktop.ViewModel
+namespace TeamCityDesktop
 {
-    public class SerializableViewModel<T> : ViewModelBase
+    public static class Serializer<T> where T : class
     {
+        public static T Load(string path)
+        {
+            if (!File.Exists(path))
+            {
+                return null;
+            }
+            var deserializer = new XmlSerializer(typeof(T));
+            using (var stream = new StreamReader(path))
+            {
+                object deserialized = deserializer.Deserialize(stream);
+                return (T)deserialized;
+            }
+        }
+
         public static void Save(T obj, string path)
         {
             CreatePath(path);
@@ -12,16 +26,6 @@ namespace TeamCityDesktop.ViewModel
             using (var stream = new StreamWriter(path))
             {
                 serializer.Serialize(stream, obj);
-            }
-        }
-
-        public static T Load(string path)
-        {
-            var deserializer = new XmlSerializer(typeof(T));
-            using (var stream = new StreamReader(path))
-            {
-                object deserialized = deserializer.Deserialize(stream);
-                return (T)deserialized;
             }
         }
 

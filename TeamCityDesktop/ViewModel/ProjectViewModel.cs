@@ -1,100 +1,110 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Windows;
-using TeamCitySharp;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
 using TeamCitySharp.DomainEntities;
 
 namespace TeamCityDesktop.ViewModel
 {
-    public class ProjectViewModel : TreeViewModelBase
+    public class ProjectViewModel : AsyncCollectionViewModel<BuildConfigViewModel>, IDisposable
     {
-        private Project project;
-        private bool refreshed;
+        private readonly Project project;
+        private bool isExpanded;
+        private bool successful;
+        private bool loaded;
 
-        public ProjectViewModel(TeamCityClient client)
+        public ProjectViewModel(Project project)
         {
-            Client = client;
-            Children.Add(new LoadingViewModel());
+            if (project == null) throw new ArgumentNullException("project");
+            this.project = project;
+
+            Collection.CollectionChanged += CollectionChanged;
+        }
+
+        /// <summary>
+        /// A project is successful if all bulid configs are successful.
+        /// </summary>
+        public bool IsSuccessful
+        {
+            get { return successful; }
+            private set
+            {
+                if (value != successful)
+                {
+                    successful = value;
+                    OnPropertyChanged("IsSuccessful");
+                }
+            }
         }
 
         public Project Project
         {
             get { return project; }
-            set
-            {
-                if (value != project)
-                {
-                    project = value;
-                    OnPropertyChanged("Project");
-                }
-            }
         }
 
-        public override bool IsExpanded
+        public bool IsExpanded
         {
-            get { return base.IsExpanded; }
+            get { return isExpanded; }
             set
             {
-                if (value != base.IsExpanded)
+                if (value != isExpanded)
                 {
-                    if (!refreshed)
+                    if (!loaded)
                     {
-                        RefreshAsync();
-                        refreshed = true;
+                        loaded = true;
+                        LoadCollectionAsync();
                     }
-                    base.IsExpanded = value;
+                    isExpanded = value;
+                    OnPropertyChanged("IsExpanded");
                 }
             }
         }
 
-        protected override void Refresh()
+        public override void LoadCollectionAsync()
         {
-            IsLoading = true;
-            try
-            {
-                List<BuildConfig> cached = new Cache(project).Load();
-                if (cached.Count == 0)
-                {
-                    cached = Client.BuildConfigsByProjectId(project.Id);
-                    new Cache(project, cached).Save();
-                }
-                Application.Current.Dispatcher.BeginInvoke(
-                    (Action)(() => WrapModels(cached)));
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message, e.GetType().Name);
-            }
-            IsLoading = false;
+            RequestManager.Instance.GetBuildConfigsAsync(
+                buildConfigs => DispatcherUpdateCollection(buildConfigs
+                    .Where(x => x.ProjectId == project.Id)
+                    .Select(x => new BuildConfigViewModel(x))));
         }
 
-        private void WrapModels(IEnumerable<BuildConfig> buildConfigs)
-        {
-            if (Children.Count == 1 && Children[0] is LoadingViewModel)
-            {
-                Children.Clear();
-            }
-            foreach (BuildConfig buildConfig in buildConfigs)
-            {
-                Children.Add(new BuildConfigViewModel
-                    {
-                        BuildConfig = buildConfig,
-                        Client = Client
-                    });
-            }
-        }
+        #region IDisposable Members
 
-        #region Nested type: Cache
-
-        private class Cache : GenericCache<List<BuildConfig>>
+        public void Dispose()
         {
-            public Cache(Project parent, List<BuildConfig> buildConfigs = null)
-                : base(Path.Combine("Cache", parent.Id + "_buildconfigs.xml"), buildConfigs)
-            {
-            }
+            Collection.Clear();
+            Collection.CollectionChanged -= CollectionChanged;
         }
 
         #endregion
+
+        private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            IsSuccessful = Collection.All(x => x.IsSuccessful);
+
+            if (e.OldItems != null)
+            {
+                foreach (BuildConfigViewModel oldItem in e.OldItems.OfType<BuildConfigViewModel>())
+                {
+                    oldItem.PropertyChanged -= BuildConfigViewModelPropertyChanged;
+                }
+            }
+            if (e.NewItems != null)
+            {
+                foreach (BuildConfigViewModel newItem in e.NewItems.OfType<BuildConfigViewModel>())
+                {
+                    newItem.PropertyChanged += BuildConfigViewModelPropertyChanged;
+                }
+            }
+        }
+
+        // Let the child with a selected item be the selected item
+        private void BuildConfigViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if ("SelectedItem".Equals(e.PropertyName))
+            {
+                SelectedItem = sender as BuildConfigViewModel;
+            }
+        }
     }
 }

@@ -1,121 +1,60 @@
-﻿using System;
-using System.Xml.Serialization;
+﻿using System.Collections.Generic;
+using TeamCityDesktop.Model;
 using TeamCitySharp;
+using TeamCitySharp.DomainEntities;
 
 namespace TeamCityDesktop.ViewModel
 {
     /// <summary>
-    /// Models a single server connection.
+    /// This class exists mainly for cache a response from the server,
+    /// since I cant assume that a TeamCity will be present during demo.
     /// </summary>
     public class ServerViewModel : ViewModelBase
     {
-        private bool guest;
-        private bool isValid;
-        private string password;
-        private string serverUrl;
-        private string username;
+        private readonly TeamCityClient client;
+        private List<BuildViewModel> builds;
+        private List<Change> changes;
+        private ProjectsViewModel projects;
 
-        public string ServerUrl
+        public ServerViewModel(ServerCredentialsModel serverCredentials)
         {
-            get { return serverUrl; }
+            client = serverCredentials.CreateClient();
+
+            //buildConfigs = new BuildConfigsViewModel(client);
+            //projects = new ProjectsViewModel(client);
+
+            //projects.LoadCollectionAsync();
+        }
+
+        public ProjectsViewModel Projects
+        {
+            get { return projects; }
+        }
+
+        public List<BuildViewModel> Builds
+        {
+            get { return builds; }
             set
             {
-                if (value != serverUrl)
+                if (value != builds)
                 {
-                    serverUrl = value;
-                    OnPropertyChanged("ServerUrl");
-                    UpdateValid();
+                    builds = value;
+                    OnPropertyChanged("Builds");
                 }
             }
         }
 
-        public string Username
+        public List<Change> Changes
         {
-            get { return username; }
+            get { return changes; }
             set
             {
-                if (value != username)
+                if (value != changes)
                 {
-                    username = value;
-                    OnPropertyChanged("Username");
-                    UpdateValid();
+                    changes = value;
+                    OnPropertyChanged("Changes");
                 }
             }
-        }
-
-        public string Password
-        {
-            get { return password; }
-            set
-            {
-                if (value != password)
-                {
-                    password = value;
-                    OnPropertyChanged("Password");
-                    UpdateValid();
-                }
-            }
-        }
-
-        public bool Guest
-        {
-            get { return guest; }
-            set
-            {
-                if (value != guest)
-                {
-                    guest = value;
-                    OnPropertyChanged("Guest");
-                    UpdateValid();
-                }
-            }
-        }
-
-        [XmlIgnore]
-        public bool IsValid
-        {
-            get { return isValid; }
-            private set
-            {
-                if (value != isValid)
-                {
-                    isValid = value;
-                    OnPropertyChanged("IsValid");
-                }
-            }
-        }
-
-        private void UpdateValid()
-        {
-            Uri o;
-            if (!Uri.TryCreate(serverUrl, UriKind.RelativeOrAbsolute, out o))
-            {
-                IsValid = false;
-                return;
-            }
-            if (guest)
-            {
-                IsValid = true;
-                return;
-            }
-            if (string.IsNullOrEmpty(username))
-            {
-                IsValid = false;
-                return;
-            }
-            if (string.IsNullOrEmpty(password))
-            {
-                IsValid = false;
-                return;
-            }
-            IsValid = true;
-        }
-
-        public TeamCityClient CreateClient()
-        {
-            var client = new TeamCityClient(serverUrl);
-            client.Connect(username, password, guest);
-            return client;
         }
     }
 }

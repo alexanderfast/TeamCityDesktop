@@ -1,140 +1,115 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.IO;
-using System.Windows;
-using System.Windows.Data;
+using System.Linq;
 using TeamCitySharp.DomainEntities;
 
 namespace TeamCityDesktop.ViewModel
 {
-    public class BuildConfigViewModel : TreeViewModelBase
+    public class BuildConfigViewModel : AsyncCollectionViewModel<BuildViewModel>
     {
-        private readonly ObservableCollection<BuildViewModel> builds =
-            new ObservableCollection<BuildViewModel>();
+        private readonly BuildConfig buildConfig;
+        private bool isExpanded;
+        private bool loaded;
+        private bool successful;
 
-        private readonly ICollectionView collectionView;
-        private BuildConfig buildConfig;
-        private bool refreshed;
-
-        public BuildConfigViewModel()
+        public BuildConfigViewModel(BuildConfig buildConfig)
         {
-            collectionView = CollectionViewSource.GetDefaultView(builds);
-            ((ListCollectionView)collectionView).CustomSort = new SortByDate();
+            if (buildConfig == null) throw new ArgumentNullException("buildConfig");
+            this.buildConfig = buildConfig;
+
+            RequestManager.Instance.GetMostRecentBuildInBuildConfigAsync(
+                buildConfig, x => IsSuccessful = "SUCCESS".Equals(x.Status));
         }
 
         public BuildConfig BuildConfig
         {
             get { return buildConfig; }
-            set
+        }
+
+        /// <summary>
+        /// A BuildConfig is successful if the latest build is successful.
+        /// </summary>
+        public bool IsSuccessful
+        {
+            get { return successful; }
+            private set
             {
-                if (value != buildConfig)
+                if (value != successful)
                 {
-                    buildConfig = value;
-                    OnPropertyChanged("BuildConfig");
+                    successful = value;
+                    OnPropertyChanged("IsSuccessful");
                 }
             }
         }
 
-        public ICollectionView Builds
+        public bool IsExpanded
         {
-            get { return collectionView; }
-        }
-
-        public override bool IsSelected
-        {
-            get { return base.IsSelected; }
+            get { return isExpanded; }
             set
             {
-                if (value != base.IsSelected)
+                if (value != isExpanded)
                 {
-                    base.IsSelected = value;
-                    if (!refreshed)
+                    if (!loaded)
                     {
-                        refreshed = true;
-                        RefreshAsync();
+                        loaded = true;
+                        LoadCollectionAsync();
                     }
+                    isExpanded = value;
+                    OnPropertyChanged("IsExpanded");
                 }
             }
         }
 
-        protected override void Refresh()
+        public override BuildViewModel SelectedItem
         {
-            IsLoading = true;
-            try
+            get { return base.SelectedItem; }
+            set
             {
-                List<Build> cached = new Cache(buildConfig).Load();
-                if (cached.Count == 0)
+                if (!Equals(value, base.SelectedItem))
                 {
-                    cached.AddRange(Client.ErrorBuildsByBuildConfigId(buildConfig.Id));
-                    cached.AddRange(Client.FailedBuildsByBuildConfigId(buildConfig.Id));
-                    cached.AddRange(Client.SuccessfulBuildsByBuildConfigId(buildConfig.Id));
-                    new Cache(buildConfig, cached).Save();
-                }
-                Application.Current.Dispatcher.BeginInvoke(
-                    (Action)(() => WrapModels(cached)));
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message, e.GetType().Name);
-            }
-            IsLoading = false;
-        }
-
-        private void WrapModels(IEnumerable<Build> buildConfigs)
-        {
-            // dont add to children since we want builds in a separate view
-            foreach (Build build in buildConfigs)
-            {
-                builds.Add(new BuildViewModel
+                    if (value != null)
                     {
-                        Build = build,
-                        Client = Client
-                    });
-            }
-        }
-
-        #region Nested type: Cache
-
-        private class Cache : GenericCache<List<Build>>
-        {
-            public Cache(BuildConfig parent, List<Build> builds = null)
-                : base(Path.Combine("Cache", parent.Id + "_builds.xml"), builds)
-            {
-            }
-        }
-
-        #endregion
-
-        #region Nested type: SortByDate
-
-        public class SortByDate : IComparer
-        {
-            public SortByDate()
-            {
-                Ascending = true;
-            }
-
-            public bool Ascending { get; set; }
-
-            #region IComparer Members
-
-            public int Compare(object x, object y)
-            {
-                if (x is BuildViewModel && y is BuildViewModel)
-                {
-                    DateTime date1 = ((BuildViewModel)x).Build.StartDate;
-                    DateTime date2 = ((BuildViewModel)y).Build.StartDate;
-                    return Ascending ? date2.CompareTo(date1) : date1.CompareTo(date2);
+                        value.LoadCollectionAsync();
+                    }
+                    base.SelectedItem = value;
+                    OnPropertyChanged("SelectedItem");
                 }
-                return -1;
             }
-
-            #endregion
         }
 
-        #endregion
+        public override void LoadCollectionAsync()
+        {
+            RequestManager.Instance.GetBuildsInBuildConfigAsync(
+                buildConfig,
+                builds => DispatcherUpdateCollection(builds.Select(x => new BuildViewModel(x))));
+        }
+
+        //#region Nested type: SortByDate
+
+        //public class SortByDate : IComparer
+        //{
+        //    public SortByDate()
+        //    {
+        //        Ascending = true;
+        //    }
+
+        //    public bool Ascending { get; set; }
+
+        //    #region IComparer Members
+
+        //    public int Compare(object x, object y)
+        //    {
+        //        if (x is BuildViewModel && y is BuildViewModel)
+        //        {
+        //            DateTime date1 = ((BuildViewModel)x).Build.StartDate;
+        //            DateTime date2 = ((BuildViewModel)y).Build.StartDate;
+        //            return Ascending ? date2.CompareTo(date1) : date1.CompareTo(date2);
+        //        }
+        //        return -1;
+        //    }
+
+        //    #endregion
+        //}
+
+        //#endregion
     }
 }

@@ -1,35 +1,27 @@
 ﻿using System.IO;
-using TeamCityDesktop.ViewModel;
 
 namespace TeamCityDesktop
 {
     /// <summary>
     /// Be nice to the guys at codebetter.com
     /// </summary>
-    internal class GenericCache<T> : SerializableViewModel<T> where T : new()
+    internal class GenericCache<T> where T : class, new()
     {
-        private readonly T data;
-        private readonly string filename;
-
-        protected GenericCache(string filename)
+        public GenericCache(string filename = null)
         {
-            this.filename = filename;
+            Filename = filename;
         }
 
-        protected GenericCache(string filename, T data)
-        {
-            this.filename = filename;
-            this.data = data;
-        }
+        public string Filename { get; set; }
 
-        public void Save()
+        public void Save(T data)
         {
-            Save(data, filename);
+            Serializer<T>.Save(data, Filename);
         }
 
         public T Load()
         {
-            return File.Exists(filename) ? Load(filename) : new T();
+            return File.Exists(Filename) ? Serializer<T>.Load(Filename) : new T();
         }
     }
 }

@@ -1,70 +1,58 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Windows;
-using TeamCitySharp;
-using TeamCitySharp.DomainEntities;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
 
 namespace TeamCityDesktop.ViewModel
 {
-    public class ProjectsViewModel : ClientResponseViewModel
+    public class ProjectsViewModel : AsyncCollectionViewModel<ProjectViewModel>, IDisposable
     {
-        private readonly TeamCityClient client;
-
-        private readonly ObservableCollection<ProjectViewModel> projects =
-            new ObservableCollection<ProjectViewModel>();
-
-        public ProjectsViewModel(TeamCityClient client)
+        public ProjectsViewModel()
         {
-            this.client = client;
-            RefreshAsync();
+            Collection.CollectionChanged += CollectionChanged;
         }
 
-        public ObservableCollection<ProjectViewModel> Projects
+        #region IDisposable Members
+
+        public void Dispose()
         {
-            get { return projects; }
-        }
-
-        protected override void Refresh()
-        {
-            IsLoading = true;
-            try
-            {
-                List<Project> cached = new Cache().Load();
-                if (cached.Count == 0)
-                {
-                    cached = client.AllProjects();
-                    new Cache(cached).Save();
-                }
-                Application.Current.Dispatcher.BeginInvoke(
-                    (Action)(() => WrapModels(cached)));
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show(e.Message, e.GetType().Name);
-            }
-            IsLoading = false;
-        }
-
-        private void WrapModels(IEnumerable<Project> projectsToAdd)
-        {
-            foreach (Project project in projectsToAdd)
-            {
-                projects.Add(new ProjectViewModel(client) {Project = project});
-            }
-        }
-
-        #region Nested type: Cache
-
-        private class Cache : GenericCache<List<Project>>
-        {
-            private const string Filename = @"Cache\Projects.xml";
-
-            public Cache(List<Project> projects = null) : base(Filename, projects)
-            {
-            }
+            Collection.Clear();
+            Collection.CollectionChanged -= CollectionChanged;
         }
 
         #endregion
+
+        public override void LoadCollectionAsync()
+        {
+            RequestManager.Instance.GetProjectsAsync(
+                projects => DispatcherUpdateCollection(projects.Select(x => new ProjectViewModel(x))));
+        }
+
+        private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.OldItems != null)
+            {
+                foreach (ProjectViewModel oldItem in e.OldItems.OfType<ProjectViewModel>())
+                {
+                    oldItem.PropertyChanged -= ProjectViewModelPropertyChanged;
+                }
+            }
+            if (e.NewItems != null)
+            {
+                foreach (ProjectViewModel newItem in e.NewItems.OfType<ProjectViewModel>())
+                {
+                    newItem.PropertyChanged += ProjectViewModelPropertyChanged;
+                }
+            }
+        }
+
+        // Let the child with a selected item be the selected item
+        private void ProjectViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            if ("SelectedItem".Equals(e.PropertyName))
+            {
+                SelectedItem = sender as ProjectViewModel;
+            }
+        }
     }
 }

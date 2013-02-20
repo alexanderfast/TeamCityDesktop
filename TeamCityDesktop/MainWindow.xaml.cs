@@ -1,42 +1,47 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Windows;
+using System.Windows.Forms;
 using System.Windows.Input;
 using TeamCityDesktop.Controls;
-using TeamCityDesktop.ViewModel;
+using TeamCityDesktop.Model;
+using TeamCityDesktop.Windows;
+using TeamCitySharp;
+using Application = System.Windows.Application;
 
 namespace TeamCityDesktop
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        private readonly SettingsViewModel settings;
+        private const string ServerFile = "Servers.xml";
         private object activity;
+        private ServerCredentialsModel serverCredentials;
 
         public MainWindow()
         {
-            //MaxHeight = SystemParameters.PrimaryScreenHeight - 50;
-
-            // for demo purposes always show the login screen
-            var login = new Login();
-            activity = login;
-
-            settings = SettingsViewModel.Load();
-            ServerViewModel server;
-            if (settings.Servers.Count == 0)
+            List<ServerCredentialsModel> credentials = null;
+            if (File.Exists(ServerFile))
+            {
+                credentials = Serializer<List<ServerCredentialsModel>>.Load(ServerFile);
+            }
+            if (credentials == null || credentials.Count == 0)
             {
                 // if no servers have been saved, create some default setting
-                server = new ServerViewModel();
-                settings.Servers.Add(server);
-                login.ViewModel.Server = server;
-                login.ViewModel.Server.ServerUrl = "teamcity.codebetter.com";
-                login.ViewModel.Server.Guest = true;
+                var newCredentials = new ServerCredentialsModel
+                    {
+                        Url = "teamcity.codebetter.com",
+                        Guest = true
+                    };
+                var login = new Login(newCredentials);
+                activity = login;
             }
             else
             {
-                server = settings.Servers[0];
+                ShowServerOverview(credentials[0]);
             }
-            login.ViewModel.Server = server;
-            activity = login;
 
             InitializeComponent();
         }
@@ -64,12 +69,25 @@ namespace TeamCityDesktop
 
         #endregion
 
+        private void ShowServerOverview(ServerCredentialsModel credentials)
+        {
+            serverCredentials = credentials;
+            RequestManager.Instance.Connect(credentials);
+
+            // update cache right away
+            RequestManager.Instance.GetProjectsAsync(null);
+            RequestManager.Instance.GetBuildConfigsAsync(null);
+
+            var overview = new ServerOverview();
+            Activity = overview;
+        }
+
         private void ConnectCanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
             var login = activity as Login;
             e.CanExecute = login == null
                 ? false
-                : login.ViewModel.Server.IsValid;
+                : login.ServerCredentials.IsValid();
         }
 
         private void ConnectExecuted(object sender, ExecutedRoutedEventArgs e)
@@ -78,16 +96,37 @@ namespace TeamCityDesktop
             if (login != null)
             {
                 // save the credential info
-                settings.Save();
+                List<ServerCredentialsModel> credentials = File.Exists(ServerFile)
+                    ? Serializer<List<ServerCredentialsModel>>.Load(ServerFile)
+                    : new List<ServerCredentialsModel>();
+                credentials.Add(login.ServerCredentials);
+                Serializer<List<ServerCredentialsModel>>.Save(credentials, ServerFile);
 
-                var overview = new ServerOverview();
-                Activity = overview;
-                overview.ViewModel.Connect(login.ViewModel.Server);
+                ShowServerOverview(login.ServerCredentials);
+            }
+        }
 
-                // maximize the window
-                WindowState = WindowState.Maximized;
-                MaxWidth = SystemParameters.WorkArea.Width;
-                MaxHeight = SystemParameters.WorkArea.Height;
+        private void DownloadArtifactsCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            if (e.Parameter is IList<ArtifactModel> && ((IList)e.Parameter).Count > 0)
+            {
+                e.CanExecute = true;
+            }
+        }
+
+        private void DownloadArtifactsExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            var dialog = new FolderBrowserDialog();
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                TeamCityClient client = serverCredentials.CreateClient();
+                var downloader = new ArtifactDownloader(client, dialog.SelectedPath, ((IList<ArtifactModel>)e.Parameter));
+                downloader.RunWorkerAsync();
+                new ProgressDialog(downloader)
+                    {
+                        Owner = Application.Current.MainWindow,
+                        Title = "Downloading artifacts..."
+                    }.ShowDialog();
             }
         }
     }

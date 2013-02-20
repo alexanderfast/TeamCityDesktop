@@ -1,17 +1,17 @@
 ﻿using System.Windows.Controls;
-using TeamCityDesktop.ViewModel;
+using TeamCityDesktop.Model;
 
 namespace TeamCityDesktop.Controls
 {
     public partial class Login : UserControl
     {
-        public Login(LoginViewModel viewModel = null)
+        public Login(ServerCredentialsModel serverCredentials = null)
         {
-            ViewModel = viewModel ?? new LoginViewModel();
-            DataContext = ViewModel;
+            ServerCredentials = serverCredentials ?? new ServerCredentialsModel();
+            DataContext = ServerCredentials;
             InitializeComponent();
         }
 
-        public LoginViewModel ViewModel { get; private set; }
+        public ServerCredentialsModel ServerCredentials { get; private set; }
     }
 }

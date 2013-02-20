@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using TeamCityDesktop.Model;
 using TeamCityDesktop.ViewModel;
 using TeamCitySharp;
 
@@ -9,15 +10,15 @@ namespace TeamCityDesktop
 {
     public class ArtifactDownloader : BackgroundWorker
     {
-        private readonly List<ArtifactViewModel> artifacts;
+        private readonly List<ArtifactModel> artifacts;
         private readonly TeamCityClient client;
         private readonly string targetPath;
 
-        public ArtifactDownloader(TeamCityClient client, string targetPath, List<ArtifactViewModel> artifacts)
+        public ArtifactDownloader(TeamCityClient client, string targetPath, IEnumerable<ArtifactModel> artifacts)
         {
             this.client = client;
             this.targetPath = targetPath;
-            this.artifacts = artifacts;
+            this.artifacts = new List<ArtifactModel>(artifacts);
             WorkerReportsProgress = true;
             WorkerSupportsCancellation = false;
         }
@@ -28,7 +29,7 @@ namespace TeamCityDesktop
 
             for (int i = 0; i < artifacts.Count; i++)
             {
-                ArtifactViewModel artifact = artifacts[i];
+                ArtifactModel artifact = artifacts[i];
                 string filename = ArtifactUrlToFilename(artifact.DownloadUrl);
 
                 double progress = (i / (double)artifacts.Count) * 100;

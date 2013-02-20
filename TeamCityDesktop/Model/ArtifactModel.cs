@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
 
-namespace TeamCityDesktop.ViewModel
+namespace TeamCityDesktop.Model
 {
-    public class ArtifactViewModel : ViewModelBase
+    public class ArtifactModel
     {
         // path is something like:
         // /repository/download/bt353/72/NuGet/bbv.Common.Async.Log4Net.7.0.12149.1635.nupkg
-        public ArtifactViewModel(string path)
+        public ArtifactModel(string path)
         {
             if (string.IsNullOrEmpty(path))
             {

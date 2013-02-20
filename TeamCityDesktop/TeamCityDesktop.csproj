@@ -78,23 +78,17 @@
     </Compile>
     <Compile Include="Converters\BoolToVisibility.cs" />
     <Compile Include="Converters\NullToVisibility.cs" />
-    <Compile Include="ViewModel\ArtifactCollectionViewModel.cs" />
-    <Compile Include="ViewModel\ArtifactViewModel.cs" />
-    <Compile Include="ViewModel\BuildConfigsViewModel.cs" />
+    <Compile Include="RequestManager.cs" />
+    <Compile Include="Model\ArtifactModel.cs" />
     <Compile Include="ViewModel\BuildViewModel.cs" />
-    <Compile Include="ViewModel\ClientResponseViewModel.cs" />
-    <Compile Include="ViewModel\DelegateCommand.cs" />
+    <Compile Include="ViewModel\AsyncCollectionViewModel.cs" />
     <Compile Include="GenericCache.cs" />
-    <Compile Include="ViewModel\LoadingViewModel.cs" />
-    <Compile Include="ViewModel\LoginViewModel.cs" />
     <Compile Include="ViewModel\ProjectsViewModel.cs" />
     <Compile Include="ViewModel\ProjectViewModel.cs" />
-    <Compile Include="ViewModel\SerializableViewModel.cs" />
+    <Compile Include="Serializer.cs" />
     <Compile Include="ViewModel\ServerOverviewViewModel.cs" />
-    <Compile Include="ViewModel\ServerResponseViewModel.cs" />
     <Compile Include="ViewModel\ServerViewModel.cs" />
-    <Compile Include="ViewModel\SettingsViewModel.cs" />
-    <Compile Include="ViewModel\TreeViewModelBase.cs" />
+    <Compile Include="Model\ServerCredentialsModel.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />
     <Compile Include="ViewModel\BuildConfigViewModel.cs" />
     <Compile Include="Windows\ProgressDialog.xaml.cs">
@@ -123,6 +117,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Themes\BuildConfigViewModelDataTemplate.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Themes\BuildViewModelDataTemplate.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -131,11 +129,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Themes\ExpanderCheckBox.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Themes\Generic.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Themes\ServerViewDataTemplate.xaml">
+    <Page Include="Themes\IsSuccessfulCheckBoxTemplate.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\ProjectViewModelDataTemplate.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -176,10 +182,28 @@
     <Content Include="Images\Failed.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Images\FailingCollapsed.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\FailingExpanded.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Images\Loading.gif">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Images\NeutralCollapsed.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\NeutralExpanded.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Images\Successful.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\SuccessfulCollapsed.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Images\SuccessfulExpanded.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Images\TeamCityLogo.png">
