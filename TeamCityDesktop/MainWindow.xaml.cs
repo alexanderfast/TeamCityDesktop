@@ -7,7 +7,9 @@ using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using TeamCityDesktop.Controls;
+using TeamCityDesktop.DataAccess;
 using TeamCityDesktop.Model;
+using TeamCityDesktop.ViewModel;
 using TeamCityDesktop.Windows;
 using TeamCitySharp;
 using Application = System.Windows.Application;
@@ -19,6 +21,7 @@ namespace TeamCityDesktop
         private const string ServerFile = "Servers.xml";
         private object activity;
         private ServerCredentialsModel serverCredentials;
+        private IDataProvider dataProvider;
 
         public MainWindow()
         {
@@ -72,13 +75,16 @@ namespace TeamCityDesktop
         private void ShowServerOverview(ServerCredentialsModel credentials)
         {
             serverCredentials = credentials;
-            RequestManager.Instance.Connect(credentials);
-
-            // update cache right away
-            RequestManager.Instance.GetProjectsAsync(null);
-            RequestManager.Instance.GetBuildConfigsAsync(null);
+            if (dataProvider == null)
+            {
+                dataProvider = new DataProvider(credentials);
+                // update cache right away
+                dataProvider.GetProjectsAsync(null);
+                dataProvider.GetBuildConfigsAsync(null);
+            }
 
             var overview = new ServerOverview();
+            overview.DataContext = new ServerOverviewViewModel(dataProvider);
             Activity = overview;
         }
 

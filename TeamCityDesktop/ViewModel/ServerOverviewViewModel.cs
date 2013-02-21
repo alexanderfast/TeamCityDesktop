@@ -1,20 +1,26 @@
-﻿namespace TeamCityDesktop.ViewModel
+﻿using System;
+
+using TeamCityDesktop.DataAccess;
+
+namespace TeamCityDesktop.ViewModel
 {
     public class ServerOverviewViewModel : ViewModelBase
     {
-        private ProjectsViewModel projects;
+        private readonly ProjectsViewModel projects;
+
+        public ServerOverviewViewModel(IDataProvider dataProvider)
+        {
+            if (dataProvider == null)
+            {
+                throw new ArgumentNullException("dataProvider");
+            }
+            projects = new ProjectsViewModel(dataProvider);
+            projects.LoadCollectionAsync();
+        }
 
         public ProjectsViewModel Projects
         {
-            get
-            {
-                if (projects == null)
-                {
-                    projects = new ProjectsViewModel();
-                    projects.LoadCollectionAsync();
-                }
-                return projects;
-            }
+            get { return projects; }
         }
     }
 }

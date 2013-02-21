@@ -78,7 +78,8 @@
     </Compile>
     <Compile Include="Converters\BoolToVisibility.cs" />
     <Compile Include="Converters\NullToVisibility.cs" />
-    <Compile Include="RequestManager.cs" />
+    <Compile Include="DataAccess\IDataProvider.cs" />
+    <Compile Include="DataAccess\DataProvider.cs" />
     <Compile Include="Model\ArtifactModel.cs" />
     <Compile Include="ViewModel\BuildViewModel.cs" />
     <Compile Include="ViewModel\AsyncCollectionViewModel.cs" />

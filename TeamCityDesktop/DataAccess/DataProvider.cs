@@ -3,18 +3,20 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+
 using TeamCityDesktop.Model;
+
 using TeamCitySharp;
 using TeamCitySharp.DomainEntities;
 using TeamCitySharp.Locators;
+
 using File = System.IO.File;
 
-namespace TeamCityDesktop
+namespace TeamCityDesktop.DataAccess
 {
-    internal class RequestManager
+    public class DataProvider : IDataProvider
     {
         private const string CacheFolder = "Cache";
-        private static RequestManager instance;
 
         // BuildConfigId to Build cache lookup
         private readonly Dictionary<string, GenericCache<List<Build>>> buildCache =
@@ -26,18 +28,9 @@ namespace TeamCityDesktop
         private readonly GenericCache<List<Project>> projectCache =
             new GenericCache<List<Project>>(Path.Combine(CacheFolder, "Projects.xml"));
 
-        private TeamCityClient teamCityClient;
+        private readonly TeamCityClient teamCityClient;
 
-        private RequestManager()
-        {
-        }
-
-        public static RequestManager Instance
-        {
-            get { return instance ?? (instance = new RequestManager()); }
-        }
-
-        public void Connect(ServerCredentialsModel credentials)
+        public DataProvider(ServerCredentialsModel credentials)
         {
             teamCityClient = credentials.CreateClient();
         }
@@ -98,8 +91,7 @@ namespace TeamCityDesktop
         {
             new Thread(() =>
                 {
-                    BuildLocator locator = BuildLocator.WithDimensions(BuildTypeLocator.WithId(buildConfig.Id),
-                        maxResults: 1);
+                    BuildLocator locator = BuildLocator.WithDimensions(BuildTypeLocator.WithId(buildConfig.Id), maxResults: 1);
                     if (callback != null) callback(teamCityClient.BuildsByBuildLocator(locator).FirstOrDefault());
                 }).Start();
         }

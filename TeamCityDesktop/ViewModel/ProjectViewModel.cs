@@ -2,6 +2,9 @@
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+
+using TeamCityDesktop.DataAccess;
+
 using TeamCitySharp.DomainEntities;
 
 namespace TeamCityDesktop.ViewModel
@@ -9,14 +12,19 @@ namespace TeamCityDesktop.ViewModel
     public class ProjectViewModel : AsyncCollectionViewModel<BuildConfigViewModel>, IDisposable
     {
         private readonly Project project;
+        private readonly IDataProvider dataProvider;
         private bool isExpanded;
         private bool successful;
         private bool loaded;
 
-        public ProjectViewModel(Project project)
+        public ProjectViewModel(Project project, IDataProvider dataProvider)
         {
-            if (project == null) throw new ArgumentNullException("project");
+            if (project == null)
+            {
+                throw new ArgumentNullException("project");
+            }
             this.project = project;
+            this.dataProvider = dataProvider;
 
             Collection.CollectionChanged += CollectionChanged;
         }
@@ -62,10 +70,10 @@ namespace TeamCityDesktop.ViewModel
 
         public override void LoadCollectionAsync()
         {
-            RequestManager.Instance.GetBuildConfigsAsync(
+            dataProvider.GetBuildConfigsAsync(
                 buildConfigs => DispatcherUpdateCollection(buildConfigs
                     .Where(x => x.ProjectId == project.Id)
-                    .Select(x => new BuildConfigViewModel(x))));
+                    .Select(x => new BuildConfigViewModel(x, dataProvider))));
         }
 
         protected override void Dispose(bool disposing)

@@ -2,12 +2,17 @@
 using System.ComponentModel;
 using System.Linq;
 
+using TeamCityDesktop.DataAccess;
+
 namespace TeamCityDesktop.ViewModel
 {
     public class ProjectsViewModel : AsyncCollectionViewModel<ProjectViewModel>
     {
-        public ProjectsViewModel()
+        private readonly IDataProvider dataProvider;
+
+        public ProjectsViewModel(IDataProvider dataProvider)
         {
+            this.dataProvider = dataProvider;
             Collection.CollectionChanged += CollectionChanged;
         }
 
@@ -22,8 +27,8 @@ namespace TeamCityDesktop.ViewModel
 
         public override void LoadCollectionAsync()
         {
-            RequestManager.Instance.GetProjectsAsync(
-                projects => DispatcherUpdateCollection(projects.Select(x => new ProjectViewModel(x))));
+            dataProvider.GetProjectsAsync(
+                projects => DispatcherUpdateCollection(projects.Select(x => new ProjectViewModel(x, dataProvider))));
         }
 
         private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)

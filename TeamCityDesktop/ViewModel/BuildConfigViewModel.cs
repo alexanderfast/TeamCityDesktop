@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Linq;
+
+using TeamCityDesktop.DataAccess;
+
 using TeamCitySharp.DomainEntities;
 
 namespace TeamCityDesktop.ViewModel
@@ -7,16 +10,21 @@ namespace TeamCityDesktop.ViewModel
     public class BuildConfigViewModel : AsyncCollectionViewModel<BuildViewModel>
     {
         private readonly BuildConfig buildConfig;
+        private readonly IDataProvider dataProvider;
         private bool isExpanded;
         private bool loaded;
         private bool successful;
 
-        public BuildConfigViewModel(BuildConfig buildConfig)
+        public BuildConfigViewModel(BuildConfig buildConfig, IDataProvider dataProvider)
         {
-            if (buildConfig == null) throw new ArgumentNullException("buildConfig");
+            if (buildConfig == null)
+            {
+                throw new ArgumentNullException("buildConfig");
+            }
             this.buildConfig = buildConfig;
+            this.dataProvider = dataProvider;
 
-            RequestManager.Instance.GetMostRecentBuildInBuildConfigAsync(
+            dataProvider.GetMostRecentBuildInBuildConfigAsync(
                 buildConfig, x => IsSuccessful = "SUCCESS".Equals(x.Status));
         }
 
@@ -78,9 +86,9 @@ namespace TeamCityDesktop.ViewModel
 
         public override void LoadCollectionAsync()
         {
-            RequestManager.Instance.GetBuildsInBuildConfigAsync(
+            dataProvider.GetBuildsInBuildConfigAsync(
                 buildConfig,
-                builds => DispatcherUpdateCollection(builds.Select(x => new BuildViewModel(x))));
+                builds => DispatcherUpdateCollection(builds.Select(x => new BuildViewModel(x, dataProvider))));
         }
 
         //#region Nested type: SortByDate
