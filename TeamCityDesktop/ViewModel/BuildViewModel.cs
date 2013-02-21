@@ -1,5 +1,4 @@
-﻿using System.Linq;
-
+﻿using System.Collections.Generic;
 using TeamCityDesktop.DataAccess;
 using TeamCityDesktop.Model;
 using TeamCitySharp.DomainEntities;
@@ -22,14 +21,18 @@ namespace TeamCityDesktop.ViewModel
             get { return build; }
         }
 
-        public override void LoadCollectionAsync()
+        public bool IsSuccessful
+        {
+            get { return "SUCCESS".Equals(build.Status); }
+        }
+
+        public override IEnumerable<ArtifactModel> LoadItems()
         {
             if ("N/A".Equals(build.Number))
             {
-                return;
+                return new ArtifactModel[] {};
             }
-            dataProvider.GetArtifactsInBuildAsync(build,
-                artifacts => DispatcherUpdateCollection(artifacts.Select(x => new ArtifactModel(x))));
+            return dataProvider.GetArtifactsInBuild(build);
         }
     }
 }

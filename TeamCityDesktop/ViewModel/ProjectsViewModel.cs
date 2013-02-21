@@ -1,7 +1,7 @@
-﻿using System.Collections.Specialized;
+﻿using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-
 using TeamCityDesktop.DataAccess;
 
 namespace TeamCityDesktop.ViewModel
@@ -25,10 +25,9 @@ namespace TeamCityDesktop.ViewModel
             }
         }
 
-        public override void LoadCollectionAsync()
+        public override IEnumerable<ProjectViewModel> LoadItems()
         {
-            dataProvider.GetProjectsAsync(
-                projects => DispatcherUpdateCollection(projects.Select(x => new ProjectViewModel(x, dataProvider))));
+            return dataProvider.GetProjects();
         }
 
         private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)

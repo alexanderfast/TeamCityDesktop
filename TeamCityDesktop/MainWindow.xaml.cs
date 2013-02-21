@@ -20,8 +20,8 @@ namespace TeamCityDesktop
     {
         private const string ServerFile = "Servers.xml";
         private object activity;
-        private ServerCredentialsModel serverCredentials;
         private IDataProvider dataProvider;
+        private ServerCredentialsModel serverCredentials;
 
         public MainWindow()
         {
@@ -75,17 +75,10 @@ namespace TeamCityDesktop
         private void ShowServerOverview(ServerCredentialsModel credentials)
         {
             serverCredentials = credentials;
-            if (dataProvider == null)
-            {
-                dataProvider = new DataProvider(credentials);
-                // update cache right away
-                dataProvider.GetProjectsAsync(null);
-                dataProvider.GetBuildConfigsAsync(null);
-            }
-
-            var overview = new ServerOverview();
-            overview.DataContext = new ServerOverviewViewModel(dataProvider);
-            Activity = overview;
+            Activity = new ServerOverview
+                {
+                    DataContext = new ServerOverviewViewModel(new DataProvider(credentials))
+                };
         }
 
         private void ConnectCanExecute(object sender, CanExecuteRoutedEventArgs e)

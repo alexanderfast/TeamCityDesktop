@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Linq;
-
+using System.Collections.Generic;
+using System.Threading;
 using TeamCityDesktop.DataAccess;
-
 using TeamCitySharp.DomainEntities;
 
 namespace TeamCityDesktop.ViewModel
@@ -15,7 +14,7 @@ namespace TeamCityDesktop.ViewModel
         private bool loaded;
         private bool successful;
 
-        public BuildConfigViewModel(BuildConfig buildConfig, IDataProvider dataProvider)
+        public BuildConfigViewModel(BuildConfig buildConfig, IDataProvider dataProvider) : base()
         {
             if (buildConfig == null)
             {
@@ -24,8 +23,14 @@ namespace TeamCityDesktop.ViewModel
             this.buildConfig = buildConfig;
             this.dataProvider = dataProvider;
 
-            dataProvider.GetMostRecentBuildInBuildConfigAsync(
-                buildConfig, x => IsSuccessful = "SUCCESS".Equals(x.Status));
+            ThreadPool.QueueUserWorkItem(delegate
+                {
+                    var build = dataProvider.GetMostRecentBuildInBuildConfig(buildConfig);
+                    if (build != null)
+                    {
+                        IsSuccessful = build.IsSuccessful;
+                    }
+                });
         }
 
         public BuildConfig BuildConfig
@@ -56,39 +61,15 @@ namespace TeamCityDesktop.ViewModel
             {
                 if (value != isExpanded)
                 {
-                    if (!loaded)
-                    {
-                        loaded = true;
-                        LoadCollectionAsync();
-                    }
                     isExpanded = value;
                     OnPropertyChanged("IsExpanded");
                 }
             }
         }
 
-        public override BuildViewModel SelectedItem
+        public override IEnumerable<BuildViewModel> LoadItems()
         {
-            get { return base.SelectedItem; }
-            set
-            {
-                if (!Equals(value, base.SelectedItem))
-                {
-                    if (value != null)
-                    {
-                        value.LoadCollectionAsync();
-                    }
-                    base.SelectedItem = value;
-                    OnPropertyChanged("SelectedItem");
-                }
-            }
-        }
-
-        public override void LoadCollectionAsync()
-        {
-            dataProvider.GetBuildsInBuildConfigAsync(
-                buildConfig,
-                builds => DispatcherUpdateCollection(builds.Select(x => new BuildViewModel(x, dataProvider))));
+            return dataProvider.GetBuildsInBuildConfig(buildConfig);
         }
 
         //#region Nested type: SortByDate

@@ -1,5 +1,4 @@
 ﻿using System;
-
 using TeamCityDesktop.DataAccess;
 
 namespace TeamCityDesktop.ViewModel
@@ -15,7 +14,6 @@ namespace TeamCityDesktop.ViewModel
                 throw new ArgumentNullException("dataProvider");
             }
             projects = new ProjectsViewModel(dataProvider);
-            projects.LoadCollectionAsync();
         }
 
         public ProjectsViewModel Projects

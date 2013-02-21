@@ -1,21 +1,20 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-
 using TeamCityDesktop.DataAccess;
-
 using TeamCitySharp.DomainEntities;
 
 namespace TeamCityDesktop.ViewModel
 {
-    public class ProjectViewModel : AsyncCollectionViewModel<BuildConfigViewModel>, IDisposable
+    public class ProjectViewModel : AsyncCollectionViewModel<BuildConfigViewModel>
     {
-        private readonly Project project;
         private readonly IDataProvider dataProvider;
+        private readonly Project project;
         private bool isExpanded;
-        private bool successful;
         private bool loaded;
+        private bool successful;
 
         public ProjectViewModel(Project project, IDataProvider dataProvider)
         {
@@ -57,23 +56,15 @@ namespace TeamCityDesktop.ViewModel
             {
                 if (value != isExpanded)
                 {
-                    if (!loaded)
-                    {
-                        loaded = true;
-                        LoadCollectionAsync();
-                    }
                     isExpanded = value;
                     OnPropertyChanged("IsExpanded");
                 }
             }
         }
 
-        public override void LoadCollectionAsync()
+        public override IEnumerable<BuildConfigViewModel> LoadItems()
         {
-            dataProvider.GetBuildConfigsAsync(
-                buildConfigs => DispatcherUpdateCollection(buildConfigs
-                    .Where(x => x.ProjectId == project.Id)
-                    .Select(x => new BuildConfigViewModel(x, dataProvider))));
+            return dataProvider.GetBuildConfigsByProject(project);
         }
 
         protected override void Dispose(bool disposing)

@@ -1,113 +1,62 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-
 using TeamCityDesktop.Model;
-
+using TeamCityDesktop.ViewModel;
 using TeamCitySharp;
 using TeamCitySharp.DomainEntities;
 using TeamCitySharp.Locators;
 
-using File = System.IO.File;
-
 namespace TeamCityDesktop.DataAccess
 {
-    public class DataProvider : IDataProvider
+    internal class DataProvider : IDataProvider
     {
-        private const string CacheFolder = "Cache";
-
-        // BuildConfigId to Build cache lookup
-        private readonly Dictionary<string, GenericCache<List<Build>>> buildCache =
-            new Dictionary<string, GenericCache<List<Build>>>();
-
-        private readonly GenericCache<List<BuildConfig>> buildConfigsCache =
-            new GenericCache<List<BuildConfig>>(Path.Combine(CacheFolder, "BuildConfigs.xml"));
-
-        private readonly GenericCache<List<Project>> projectCache =
-            new GenericCache<List<Project>>(Path.Combine(CacheFolder, "Projects.xml"));
-
-        private readonly TeamCityClient teamCityClient;
+        private readonly TeamCityClient client;
 
         public DataProvider(ServerCredentialsModel credentials)
         {
-            teamCityClient = credentials.CreateClient();
+            client = credentials.CreateClient();
         }
 
-        public void GetProjectsAsync(Action<List<Project>> callback)
+        #region IDataProvider Members
+
+        public IEnumerable<ProjectViewModel> GetProjects()
         {
-            new Thread(() =>
-                {
-                    List<Project> projects = SynchronizedCache(projectCache, teamCityClient.AllProjects);
-                    if (callback != null) callback(projects);
-                }).Start();
+            return client.AllProjects().Select(x => new ProjectViewModel(x, this));
         }
 
-        public void GetBuildConfigsAsync(Action<List<BuildConfig>> callback)
+        public IEnumerable<BuildConfigViewModel> GetBuildConfigs()
         {
-            new Thread(() =>
-                {
-                    List<BuildConfig> buildConfigs = SynchronizedCache(buildConfigsCache, teamCityClient.AllBuildConfigs);
-                    if (callback != null) callback(buildConfigs);
-                }).Start();
+            return client.AllBuildConfigs().Select(x => new BuildConfigViewModel(x, this));
         }
 
-        public void GetBuildsInBuildConfigAsync(BuildConfig buildConfig, Action<List<Build>> callback)
+        public IEnumerable<BuildConfigViewModel> GetBuildConfigsByProject(Project project)
         {
-            new Thread(() =>
-                {
-                    GenericCache<List<Build>> cache;
-                    lock (buildCache)
-                    {
-                        if (buildCache.ContainsKey(buildConfig.Id))
-                        {
-                            cache = buildCache[buildConfig.Id];
-                        }
-                        else
-                        {
-                            cache = new GenericCache<List<Build>>(Path.Combine(CacheFolder,
-                                string.Format("Builds_for_{0}.xml", buildConfig.Id)));
-                            buildCache.Add(buildConfig.Id, cache);
-                        }
-                    }
-                    BuildLocator locator = BuildLocator.WithDimensions(BuildTypeLocator.WithId(buildConfig.Id));
-                    List<Build> builds = SynchronizedCache(cache, () => teamCityClient.BuildsByBuildLocator(locator));
-                    if (callback != null) callback(builds);
-                }).Start();
+            return client.BuildConfigsByProjectId(
+                project.Id).Select(x => new BuildConfigViewModel(x, this));
         }
 
-        public void GetArtifactsInBuildAsync(Build build, Action<List<string>> callback)
+        public IEnumerable<BuildViewModel> GetBuildsInBuildConfig(BuildConfig buildConfig)
         {
-            new Thread(() =>
-                {
-                    List<string> artifacts = teamCityClient.ArtifactsByBuildConfigIdAndBuildNumber(build.BuildTypeId,
-                        build.Number);
-                    if (callback != null) callback(artifacts);
-                }).Start();
+            BuildLocator locator = BuildLocator.WithDimensions(
+                BuildTypeLocator.WithId(buildConfig.Id));
+            return client.BuildsByBuildLocator(
+                locator).Select(x => new BuildViewModel(x, this));
         }
 
-        public void GetMostRecentBuildInBuildConfigAsync(BuildConfig buildConfig, Action<Build> callback)
+        public IEnumerable<ArtifactModel> GetArtifactsInBuild(Build build)
         {
-            new Thread(() =>
-                {
-                    BuildLocator locator = BuildLocator.WithDimensions(BuildTypeLocator.WithId(buildConfig.Id), maxResults: 1);
-                    if (callback != null) callback(teamCityClient.BuildsByBuildLocator(locator).FirstOrDefault());
-                }).Start();
+            return client.ArtifactsByBuildConfigIdAndBuildNumber(
+                build.BuildTypeId, build.Number).Select(x => new ArtifactModel(x));
         }
 
-        private static T SynchronizedCache<T>(GenericCache<T> cache, Func<T> update) where T : class, new()
+        public BuildViewModel GetMostRecentBuildInBuildConfig(BuildConfig buildConfig)
         {
-            lock (cache)
-            {
-                if (File.Exists(cache.Filename))
-                {
-                    return cache.Load();
-                }
-                T result = update();
-                cache.Save(result);
-                return result;
-            }
+            BuildLocator locator = BuildLocator.WithDimensions(
+                BuildTypeLocator.WithId(buildConfig.Id), maxResults: 1);
+            return client.BuildsByBuildLocator(
+                locator).Select(x => new BuildViewModel(x, this)).FirstOrDefault();
         }
+
+        #endregion
     }
 }

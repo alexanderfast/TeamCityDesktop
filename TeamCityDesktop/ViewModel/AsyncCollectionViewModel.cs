@@ -1,7 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Windows;
+using System.Threading;
+using TeamCityDesktop.Extensions;
 
 namespace TeamCityDesktop.ViewModel
 {
@@ -13,12 +13,28 @@ namespace TeamCityDesktop.ViewModel
         private readonly ObservableCollection<T> collection =
             new ObservableCollection<T>();
 
-        private bool isLoading = true;
+        private bool isLoading;
+        private bool loaded;
         private T selectedItem;
 
         public ObservableCollection<T> Collection
         {
-            get { return collection; }
+            get
+            {
+                if (!loaded)
+                {
+                    // populate collection on first request
+                    loaded = true;
+                    ThreadPool.QueueUserWorkItem(delegate
+                        {
+                            IsLoading = true;
+                            var items = LoadItems();
+                            collection.DispatcherAddRange(items);
+                            IsLoading = false;
+                        });
+                }
+                return collection;
+            }
         }
 
         public virtual T SelectedItem
@@ -37,7 +53,7 @@ namespace TeamCityDesktop.ViewModel
         public bool IsLoading
         {
             get { return isLoading; }
-            protected set
+            private set
             {
                 if (value != isLoading)
                 {
@@ -47,25 +63,6 @@ namespace TeamCityDesktop.ViewModel
             }
         }
 
-        public abstract void LoadCollectionAsync();
-
-        /// <summary>
-        /// Helper method to enforce that the objects are added to the collection on the GUI thread.
-        /// </summary>
-        /// <param name="objects">The objects to add.</param>
-        protected void DispatcherUpdateCollection(IEnumerable<T> objects)
-        {
-            if (!Application.Current.CheckAccess())
-            {
-                Application.Current.Dispatcher.BeginInvoke((Action)(() => DispatcherUpdateCollection(objects)));
-                return;
-            }
-            Collection.Clear();
-            foreach (T o in objects)
-            {
-                Collection.Add(o);
-            }
-            IsLoading = false;
-        }
+        public abstract IEnumerable<T> LoadItems();
     }
 }
