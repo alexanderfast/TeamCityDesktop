@@ -13,7 +13,7 @@ namespace TeamCityDesktop.ViewModel
         private readonly ObservableCollection<T> collection =
             new ObservableCollection<T>();
 
-        private bool isLoading;
+        private bool isLoading = true;
         private bool loaded;
         private T selectedItem;
 
