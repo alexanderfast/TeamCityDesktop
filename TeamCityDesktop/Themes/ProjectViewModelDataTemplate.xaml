@@ -1,6 +1,7 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:ViewModel="clr-namespace:TeamCityDesktop.ViewModel">
+                    xmlns:ViewModel="clr-namespace:TeamCityDesktop.ViewModel"
+	                xmlns:Controls="clr-namespace:TeamCityDesktop.Controls">
 	<ResourceDictionary.MergedDictionaries>
 		<ResourceDictionary Source="../Themes/Converters.xaml" />
 		<ResourceDictionary Source="ExpanderCheckBox.xaml" />
@@ -17,6 +18,12 @@
 				           VerticalAlignment="Center" />
 			</DockPanel>
 			<StackPanel Visibility="{Binding ElementName=ToggleButton, Path=IsChecked, Converter={StaticResource VisibleIfTrue}}">
+				<Controls:GifImage Style="{StaticResource LoadingGif}"
+					               Visibility="{Binding IsLoading, Converter={StaticResource VisibleIfTrue}}"
+					               Margin="8 0"
+					               Width="16"
+					               Height="16"
+					               HorizontalAlignment="Left" />
 				<ItemsControl ItemsSource="{Binding Collection}" />
 			</StackPanel>
 		</StackPanel>
