@@ -1,6 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Threading;
+
 using TeamCityDesktop.DataAccess;
 using TeamCityDesktop.Extensions;
 
@@ -14,7 +13,6 @@ namespace TeamCityDesktop.ViewModel
         private readonly IDataProvider dataProvider;
         private bool isExpanded;
         private bool successful;
-        private readonly Worker worker = new Worker();
 
         public BuildConfigViewModel(BuildConfig buildConfig, IDataProvider dataProvider)
         {

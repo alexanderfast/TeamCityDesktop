@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Linq;
+
 using TeamCityDesktop.DataAccess;
 using TeamCityDesktop.Extensions;
 
@@ -15,7 +12,6 @@ namespace TeamCityDesktop.ViewModel
         private readonly IDataProvider dataProvider;
         private readonly Project project;
         private bool isExpanded;
-        private bool loaded;
         private bool successful;
 
         public ProjectViewModel(Project project, IDataProvider dataProvider)
@@ -26,8 +22,6 @@ namespace TeamCityDesktop.ViewModel
             }
             this.project = project;
             this.dataProvider = dataProvider;
-
-            Collection.CollectionChanged += CollectionChanged;
         }
 
         /// <summary>
@@ -73,44 +67,6 @@ namespace TeamCityDesktop.ViewModel
                     Collection.DispatcherAddRange(viewModels);
                     IsLoading = false;
                 });
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                Collection.Clear();
-                Collection.CollectionChanged -= CollectionChanged;
-            }
-        }
-
-        private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            IsSuccessful = Collection.All(x => x.IsSuccessful);
-
-            if (e.OldItems != null)
-            {
-                foreach (BuildConfigViewModel oldItem in e.OldItems.OfType<BuildConfigViewModel>())
-                {
-                    oldItem.PropertyChanged -= BuildConfigViewModelPropertyChanged;
-                }
-            }
-            if (e.NewItems != null)
-            {
-                foreach (BuildConfigViewModel newItem in e.NewItems.OfType<BuildConfigViewModel>())
-                {
-                    newItem.PropertyChanged += BuildConfigViewModelPropertyChanged;
-                }
-            }
-        }
-
-        // Let the child with a selected item be the selected item
-        private void BuildConfigViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            if ("SelectedItem".Equals(e.PropertyName))
-            {
-                SelectedItem = sender as BuildConfigViewModel;
-            }
         }
     }
 }

@@ -49,6 +49,21 @@ namespace TeamCityDesktop.Tests.Mocks
             builds.Add(build);
         }
 
+        public List<Project> Projects
+        {
+            get { return projects; }
+        }
+
+        public List<BuildConfig> BuildConfigs
+        {
+            get { return buildConfigs; }
+        }
+
+        public List<Build> Builds
+        {
+            get { return builds; }
+        }
+
         #region Implementation of ITeamCityClient
         public void Connect(string userName, string password, bool actAsGuest)
         {

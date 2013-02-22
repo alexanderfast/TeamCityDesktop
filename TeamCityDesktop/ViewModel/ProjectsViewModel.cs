@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using TeamCityDesktop.DataAccess;
@@ -11,6 +10,7 @@ namespace TeamCityDesktop.ViewModel
     {
         private readonly IDataProvider dataProvider;
         private BuildViewModel selectedBuild;
+        private bool disposed;
 
         public ProjectsViewModel(IDataProvider dataProvider)
         {
@@ -30,6 +30,16 @@ namespace TeamCityDesktop.ViewModel
             {
                 if (value != selectedBuild)
                 {
+                    foreach (var projectViewModel in Collection)
+                    {
+                        foreach (var buildConfigViewModel in projectViewModel.Collection)
+                        {
+                            if (buildConfigViewModel.SelectedItem != value)
+                            {
+                                buildConfigViewModel.SelectedItem = null;
+                            }
+                        }
+                    }
                     selectedBuild = value;
                     OnPropertyChanged("SelectedBuild");
                 }
@@ -50,8 +60,27 @@ namespace TeamCityDesktop.ViewModel
         {
             if (disposing)
             {
-                Collection.Clear();
-                Collection.CollectionChanged -= CollectionChanged;
+                if (!disposed)
+                {
+                    disposed = true;
+                    foreach (var projectViewModel in Collection)
+                    {
+                        foreach (var buildConfigViewModel in projectViewModel.Collection)
+                        {
+                            foreach (var buildViewModel in buildConfigViewModel.Collection)
+                            {
+                                buildViewModel.Collection.Clear();
+                                buildViewModel.Dispose();
+                            }
+                            buildConfigViewModel.Collection.Clear();
+                            buildConfigViewModel.Dispose();
+                        }
+                        projectViewModel.Collection.Clear();
+                        projectViewModel.Dispose();
+                    }
+                    Collection.Clear();
+                    Collection.CollectionChanged -= CollectionChanged;
+                }
             }
         }
 
@@ -61,24 +90,47 @@ namespace TeamCityDesktop.ViewModel
             {
                 foreach (ProjectViewModel oldItem in e.OldItems.OfType<ProjectViewModel>())
                 {
-                    oldItem.PropertyChanged -= ProjectViewModelPropertyChanged;
+                    oldItem.Collection.CollectionChanged -= ProjectCollectionChanged;
                 }
             }
             if (e.NewItems != null)
             {
                 foreach (ProjectViewModel newItem in e.NewItems.OfType<ProjectViewModel>())
                 {
-                    newItem.PropertyChanged += ProjectViewModelPropertyChanged;
+                    newItem.Collection.CollectionChanged += ProjectCollectionChanged;
                 }
             }
         }
 
-        // Let the child with a selected item be the selected item
-        private void ProjectViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void ProjectCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            if ("SelectedItem".Equals(e.PropertyName))
+            if (e.OldItems != null)
             {
-                SelectedItem = sender as ProjectViewModel;
+                foreach (BuildConfigViewModel oldItem in e.OldItems.OfType<BuildConfigViewModel>())
+                {
+                    oldItem.PropertyChanged -= BuildConfigPropertyChanged;
+                }
+            }
+            if (e.NewItems != null)
+            {
+                foreach (BuildConfigViewModel newItem in e.NewItems.OfType<BuildConfigViewModel>())
+                {
+                    newItem.PropertyChanged += BuildConfigPropertyChanged;
+                }
+            }
+        }
+
+        private void BuildConfigPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            var viewModel = sender as BuildConfigViewModel;
+            if (viewModel == null)
+            {
+                return;
+            }
+            if ("SelectedItem".Equals(e.PropertyName) &&
+                viewModel.SelectedItem != null)
+            {
+                SelectedBuild = viewModel.SelectedItem;
             }
         }
     }
