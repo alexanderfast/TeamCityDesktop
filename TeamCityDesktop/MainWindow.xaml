@@ -7,16 +7,10 @@
         WindowStartupLocation="CenterScreen"
         Background="#E3E9EF"
         Icon="Images/TeamCityLogoColor.png">
-	<Window.CommandBindings>
-		<CommandBinding Command="{x:Static TeamCityDesktop:Commands.Connect}"
-		                CanExecute="ConnectCanExecute"
-		                Executed="ConnectExecuted" />
-		<CommandBinding Command="{x:Static TeamCityDesktop:Commands.DownloadArtifacts}"
-		                CanExecute="DownloadArtifactsCanExecute"
-		                Executed="DownloadArtifactsExecuted" />
-		<CommandBinding Command="{x:Static TeamCityDesktop:Commands.DownloadAllArtifacts}"
-		                CanExecute="DownloadArtifactsCanExecute"
-		                Executed="DownloadArtifactsExecuted" />
-	</Window.CommandBindings>
-	<ContentPresenter Content="{Binding Activity, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=TeamCityDesktop:MainWindow}}" />
+    <Window.CommandBindings>
+        <CommandBinding Command="{x:Static TeamCityDesktop:Commands.Connect}"
+                        CanExecute="ConnectCanExecute"
+                        Executed="ConnectExecuted" />
+    </Window.CommandBindings>
+    <ContentPresenter Content="{Binding Activity, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=TeamCityDesktop:MainWindow}}" />
 </Window>

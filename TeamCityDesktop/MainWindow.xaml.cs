@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -22,6 +21,8 @@ namespace TeamCityDesktop
         private object activity;
         private IDataProvider dataProvider;
         private ServerCredentialsModel serverCredentials;
+        private ServerOverviewViewModel serverOverviewViewModel;
+        private IArtifactDownloader artifactDownloader;
 
         public MainWindow()
         {
@@ -66,6 +67,37 @@ namespace TeamCityDesktop
             }
         }
 
+        public ServerOverviewViewModel ServerOverviewViewModel
+        {
+            get { return serverOverviewViewModel; }
+            set
+            {
+                if (value != serverOverviewViewModel)
+                {
+                    if (serverOverviewViewModel != null)
+                    {
+                        serverOverviewViewModel.Projects.PropertyChanged -=
+                            ProjectsPropertyChanged;
+                    }
+                    serverOverviewViewModel = value;
+                    if (serverOverviewViewModel != null)
+                    {
+                        serverOverviewViewModel.Projects.PropertyChanged +=
+                            ProjectsPropertyChanged;
+                    }
+                    if (PropertyChanged != null)
+                    {
+                        PropertyChanged(this, new PropertyChangedEventArgs("ServerOverviewViewModel"));
+                    }
+                }
+            }
+        }
+
+        private void ProjectsPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            //throw new NotImplementedException();
+        }
+
         #region INotifyPropertyChanged Members
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -75,12 +107,17 @@ namespace TeamCityDesktop
         private void ShowServerOverview(ServerCredentialsModel credentials)
         {
             serverCredentials = credentials;
-            Activity = new ServerOverview
-                {
-                    DataContext = new ServerOverviewViewModel(new DataProvider(
+            if (serverOverviewViewModel == null)
+            {
+                artifactDownloader = new InteractiveArtifactDownloader(
+                    credentials.CreateClient());
+                ServerOverviewViewModel = new ServerOverviewViewModel(
+                    new DataProvider(
                         credentials.CreateClient(),
-                        new Worker { IsAsync = true }))
-                };
+                        new Worker { IsAsync = true }),
+                    artifactDownloader);
+            }
+            Activity = new ServerOverview { DataContext = serverOverviewViewModel };
         }
 
         private void ConnectCanExecute(object sender, CanExecuteRoutedEventArgs e)
@@ -109,28 +146,36 @@ namespace TeamCityDesktop
             }
         }
 
-        private void DownloadArtifactsCanExecute(object sender, CanExecuteRoutedEventArgs e)
+        /// <summary>
+        /// Shows a browser dialog that lets the user select a destination
+        /// folder, then downloads the artifacts asynchronously while displaying
+        /// a progress dialog.
+        /// </summary>
+        private class InteractiveArtifactDownloader : IArtifactDownloader
         {
-            if (e.Parameter is IList<ArtifactModel> && ((IList)e.Parameter).Count > 0)
-            {
-                e.CanExecute = true;
-            }
-        }
+            private readonly TeamCityClient client;
 
-        private void DownloadArtifactsExecuted(object sender, ExecutedRoutedEventArgs e)
-        {
-            var dialog = new FolderBrowserDialog();
-            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            public InteractiveArtifactDownloader(TeamCityClient client)
             {
-                TeamCityClient client = serverCredentials.CreateClient();
-                var downloader = new ArtifactDownloader(client, dialog.SelectedPath, ((IList<ArtifactModel>)e.Parameter));
-                downloader.RunWorkerAsync();
-                new ProgressDialog(downloader)
+                this.client = client;
+            }
+
+            #region Implementation of IArtifactDownloader
+            public void DownloadAsync(IEnumerable<ArtifactModel> artifacts)
+            {
+                var dialog = new FolderBrowserDialog();
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    var downloader = new ArtifactDownloader(client, dialog.SelectedPath, artifacts);
+                    downloader.RunWorkerAsync();
+                    new ProgressDialog(downloader)
                     {
                         Owner = Application.Current.MainWindow,
                         Title = "Downloading artifacts..."
                     }.ShowDialog();
+                }
             }
+            #endregion
         }
     }
 }

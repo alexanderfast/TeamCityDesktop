@@ -1,15 +1,13 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:Controls="clr-namespace:TeamCityDesktop.Controls">
-	<Style x:Key="LoadingGif"
-	       TargetType="Controls:GifImage">
-		<Style.Setters>
-			<Setter Property="GifSource"
-			        Value="../Images/Loading.gif" />
-			<Setter Property="Stretch"
-			        Value="None" />
-			<Setter Property="AutoStart"
-			        Value="True" />
-		</Style.Setters>
-	</Style>
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="ArtifactsViewModelDataTemplate.xaml"/>
+        <ResourceDictionary Source="BuildConfigViewModelDataTemplate.xaml"/>
+        <ResourceDictionary Source="BuildViewModelDataTemplate.xaml"/>
+        <ResourceDictionary Source="ExpanderCheckBox.xaml"/>
+        <ResourceDictionary Source="IsSuccessfulCheckBoxTemplate.xaml"/>
+        <ResourceDictionary Source="LoadingGifStyle.xaml"/>
+        <ResourceDictionary Source="ProjectsViewModelDataTemplate.xaml"/>
+        <ResourceDictionary Source="ProjectViewModelDataTemplate.xaml"/>
+    </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

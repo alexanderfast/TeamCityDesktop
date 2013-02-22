@@ -1,23 +1,23 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-	<ControlTemplate x:Key="ExpanderCheckBox"
-	                 TargetType="CheckBox">
-		<StackPanel Orientation="Horizontal">
-			<Image x:Name="_image" />
-		</StackPanel>
-		<ControlTemplate.Triggers>
-			<DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
-			             Value="True">
-				<Setter TargetName="_image"
-				        Property="Source"
-				        Value="../Images/NeutralExpanded.png" />
-			</DataTrigger>
-			<DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
-			             Value="False">
-				<Setter TargetName="_image"
-				        Property="Source"
-				        Value="../Images/NeutralCollapsed.png" />
-			</DataTrigger>
-		</ControlTemplate.Triggers>
-	</ControlTemplate>
+    <ControlTemplate x:Key="ExpanderCheckBox"
+                     TargetType="CheckBox">
+        <StackPanel Orientation="Horizontal">
+            <Image x:Name="_image" />
+        </StackPanel>
+        <ControlTemplate.Triggers>
+            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
+                         Value="True">
+                <Setter TargetName="_image"
+                        Property="Source"
+                        Value="../Images/NeutralExpanded.png" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource Self}}"
+                         Value="False">
+                <Setter TargetName="_image"
+                        Property="Source"
+                        Value="../Images/NeutralCollapsed.png" />
+            </DataTrigger>
+        </ControlTemplate.Triggers>
+    </ControlTemplate>
 </ResourceDictionary>

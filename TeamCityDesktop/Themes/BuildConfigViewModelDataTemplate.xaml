@@ -2,37 +2,37 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:ViewModel="clr-namespace:TeamCityDesktop.ViewModel"
                     xmlns:Controls="clr-namespace:TeamCityDesktop.Controls">
-	<ResourceDictionary.MergedDictionaries>
-		<ResourceDictionary Source="Converters.xaml" />
-		<ResourceDictionary Source="IsSuccessfulCheckBoxTemplate.xaml" />
-		<ResourceDictionary Source="BuildViewModelDataTemplate.xaml" />
-	</ResourceDictionary.MergedDictionaries>
-	<DataTemplate DataType="{x:Type ViewModel:BuildConfigViewModel}">
-		<StackPanel>
-			<DockPanel LastChildFill="True">
-				<CheckBox Margin="4 3"
-				          Name="ToggleButton"
-				          IsChecked="{Binding IsExpanded}"
-				          Template="{StaticResource IsSuccessfulCheckBoxTemplate}" />
-				<TextBlock Text="{Binding BuildConfig.Name}"
-				           VerticalAlignment="Center" />
-			</DockPanel>
-			<ScrollViewer VerticalScrollBarVisibility="Auto"
-			              HorizontalScrollBarVisibility="Disabled"
-			              MaxHeight="200">
-				<StackPanel Visibility="{Binding ElementName=ToggleButton, Path=IsChecked, Converter={StaticResource VisibleIfTrue}}">
-					<Controls:GifImage Style="{StaticResource LoadingGif}"
-					                   Visibility="{Binding IsLoading, Converter={StaticResource VisibleIfTrue}}"
-					                   Margin="8 0"
-					                   Width="16"
-					                   Height="16"
-					                   HorizontalAlignment="Left" />
-					<ListBox Visibility="{Binding IsLoading, Converter={StaticResource VisibleIfFalse}}"
-					         ItemsSource="{Binding Collection}"
-					         SelectedItem="{Binding SelectedItem}"
-					         BorderThickness="0" />
-				</StackPanel>
-			</ScrollViewer>
-		</StackPanel>
-	</DataTemplate>
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="Converters.xaml" />
+        <ResourceDictionary Source="LoadingGifStyle.xaml" />
+        <ResourceDictionary Source="IsSuccessfulCheckBoxTemplate.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+    <DataTemplate DataType="{x:Type ViewModel:BuildConfigViewModel}">
+        <StackPanel>
+            <DockPanel LastChildFill="True">
+                <CheckBox Margin="4 3"
+                          Name="ToggleButton"
+                          IsChecked="{Binding IsExpanded}"
+                          Template="{StaticResource IsSuccessfulCheckBoxTemplate}" />
+                <TextBlock Text="{Binding BuildConfig.Name}"
+                           VerticalAlignment="Center" />
+            </DockPanel>
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          MaxHeight="200">
+                <StackPanel Visibility="{Binding ElementName=ToggleButton, Path=IsChecked, Converter={StaticResource VisibleIfTrue}}">
+                    <Controls:GifImage Style="{StaticResource LoadingGif}"
+                                       Visibility="{Binding IsLoading, Converter={StaticResource VisibleIfTrue}}"
+                                       Margin="8 0"
+                                       Width="16"
+                                       Height="16"
+                                       HorizontalAlignment="Left" />
+                    <ListBox Visibility="{Binding IsLoading, Converter={StaticResource VisibleIfFalse}}"
+                             ItemsSource="{Binding Collection}"
+                             SelectedItem="{Binding SelectedItem}"
+                             BorderThickness="0" />
+                </StackPanel>
+            </ScrollViewer>
+        </StackPanel>
+    </DataTemplate>
 </ResourceDictionary>

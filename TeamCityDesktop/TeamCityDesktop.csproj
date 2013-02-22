@@ -83,9 +83,14 @@
     <Compile Include="DataAccess\IWorker.cs" />
     <Compile Include="DataAccess\Worker.cs" />
     <Compile Include="Extensions\ObservableCollectionExtensions.cs" />
+    <Compile Include="IArtifactDownloader.xaml.cs" />
     <Compile Include="Model\ArtifactModel.cs" />
+    <Compile Include="ViewModel\ArtifactsViewModel.cs" />
+    <Compile Include="ViewModel\ArtifactViewModel.cs" />
     <Compile Include="ViewModel\BuildViewModel.cs" />
     <Compile Include="ViewModel\AsyncCollectionViewModel.cs" />
+    <Compile Include="ViewModel\CommandViewModel.cs" />
+    <Compile Include="DelegateCommand.cs" />
     <Compile Include="ViewModel\ProjectsViewModel.cs" />
     <Compile Include="ViewModel\ProjectViewModel.cs" />
     <Compile Include="Serializer.cs" />
@@ -119,6 +124,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Themes\ArtifactsViewModelDataTemplate.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Themes\BuildConfigViewModelDataTemplate.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -140,6 +149,14 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Themes\IsSuccessfulCheckBoxTemplate.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\LoadingGifStyle.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\ProjectsViewModelDataTemplate.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
