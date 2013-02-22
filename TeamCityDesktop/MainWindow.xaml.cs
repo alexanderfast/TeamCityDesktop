@@ -77,7 +77,9 @@ namespace TeamCityDesktop
             serverCredentials = credentials;
             Activity = new ServerOverview
                 {
-                    DataContext = new ServerOverviewViewModel(new DataProvider(credentials))
+                    DataContext = new ServerOverviewViewModel(new DataProvider(
+                        credentials.CreateClient(),
+                        new Worker { IsAsync = true }))
                 };
         }
 

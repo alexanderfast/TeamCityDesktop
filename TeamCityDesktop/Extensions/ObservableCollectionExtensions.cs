@@ -17,11 +17,11 @@ namespace TeamCityDesktop.Extensions
             {
                 return;
             }
-            if (dispatcher == null)
+            if (dispatcher == null && Application.Current != null)
             {
                 dispatcher = Application.Current.Dispatcher;
             }
-            if (!dispatcher.CheckAccess())
+            if (dispatcher != null && !dispatcher.CheckAccess())
             {
                 dispatcher.BeginInvoke((Action)(
                     () => collection.DispatcherAddRange(items, dispatcher)));

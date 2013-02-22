@@ -9,15 +9,15 @@ using TeamCitySharp.Locators;
 
 namespace TeamCityDesktop.DataAccess
 {
-    internal class DataProvider : IDataProvider
+    public class DataProvider : IDataProvider
     {
         private readonly IWorker worker;
-        private readonly TeamCityClient client;
+        private readonly ITeamCityClient client;
 
-        public DataProvider(ServerCredentialsModel credentials, IWorker worker = null)
+        public DataProvider(ITeamCityClient client, IWorker worker = null)
         {
-            this.worker = worker ?? new Worker() { IsAsync = true };
-            client = credentials.CreateClient();
+            this.client = client;
+            this.worker = worker ?? new Worker { IsAsync = true };
         }
 
         #region IDataProvider Members
@@ -67,9 +67,12 @@ namespace TeamCityDesktop.DataAccess
         public void GetArtifactsInBuild(Build build, Action<IEnumerable<ArtifactModel>> callback)
         {
             if (callback == null) throw new ArgumentNullException("callback");
+            if (!(client is TeamCityClient)) throw new InvalidOperationException("Not TeamCityClient");
             worker.QueueWork(delegate
                 {
-                    callback(client.ArtifactsByBuildConfigIdAndBuildNumber(build.BuildTypeId, build.Number).Select(
+                    // TODO why is not this method in the interface?
+                    callback(
+                        ((TeamCityClient)client).ArtifactsByBuildConfigIdAndBuildNumber(build.BuildTypeId, build.Number).Select(
                         x => new ArtifactModel(x)));
                 });
         }

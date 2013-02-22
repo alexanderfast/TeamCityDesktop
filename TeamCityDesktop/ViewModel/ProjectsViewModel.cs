@@ -1,4 +1,5 @@
-﻿using System.Collections.Specialized;
+﻿using System;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using TeamCityDesktop.DataAccess;
@@ -9,6 +10,7 @@ namespace TeamCityDesktop.ViewModel
     public class ProjectsViewModel : AsyncCollectionViewModel<ProjectViewModel>
     {
         private readonly IDataProvider dataProvider;
+        private BuildViewModel selectedBuild;
 
         public ProjectsViewModel(IDataProvider dataProvider)
         {
@@ -16,12 +18,21 @@ namespace TeamCityDesktop.ViewModel
             Collection.CollectionChanged += CollectionChanged;
         }
 
-        protected override void Dispose(bool disposing)
+        /// <summary>
+        /// The list of projects contains many build configs with many builds.
+        /// This property enforces that only one build is selected among
+        /// all the lists.
+        /// </summary>
+        public BuildViewModel SelectedBuild
         {
-            if (disposing)
+            get { return selectedBuild; }
+            set
             {
-                Collection.Clear();
-                Collection.CollectionChanged -= CollectionChanged;
+                if (value != selectedBuild)
+                {
+                    selectedBuild = value;
+                    OnPropertyChanged("SelectedBuild");
+                }
             }
         }
 
@@ -33,6 +44,15 @@ namespace TeamCityDesktop.ViewModel
                     Collection.DispatcherAddRange(viewModels);
                     IsLoading = false;
                 });
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                Collection.Clear();
+                Collection.CollectionChanged -= CollectionChanged;
+            }
         }
 
         private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
