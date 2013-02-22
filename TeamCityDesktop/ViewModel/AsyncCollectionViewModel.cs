@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Threading;
-using TeamCityDesktop.Extensions;
+﻿using System.Collections.ObjectModel;
 
 namespace TeamCityDesktop.ViewModel
 {
@@ -13,30 +10,18 @@ namespace TeamCityDesktop.ViewModel
         private readonly ObservableCollection<T> collection =
             new ObservableCollection<T>();
 
-        private bool isLoading = true;
-        private bool loaded;
+        private bool isLoading;
         private T selectedItem;
+        private bool isLoaded;
 
         public ObservableCollection<T> Collection
         {
-            get
-            {
-                if (!loaded)
-                {
-                    // populate collection on first request
-                    loaded = true;
-                    ThreadPool.QueueUserWorkItem(delegate
-                        {
-                            IsLoading = true;
-                            var items = LoadItems();
-                            collection.DispatcherAddRange(items);
-                            IsLoading = false;
-                        });
-                }
-                return collection;
-            }
+            get { return collection; }
         }
 
+        /// <summary>
+        /// The currently selected item in the collection.
+        /// </summary>
         public virtual T SelectedItem
         {
             get { return selectedItem; }
@@ -50,10 +35,14 @@ namespace TeamCityDesktop.ViewModel
             }
         }
 
+        /// <summary>
+        /// True if the collection is currently being populated from another
+        /// thread.
+        /// </summary>
         public bool IsLoading
         {
             get { return isLoading; }
-            private set
+            protected set
             {
                 if (value != isLoading)
                 {
@@ -63,6 +52,25 @@ namespace TeamCityDesktop.ViewModel
             }
         }
 
-        public abstract IEnumerable<T> LoadItems();
+        /// <summary>
+        /// True if the collection has already been populated.
+        /// </summary>
+        public bool IsLoaded
+        {
+            get { return isLoaded; }
+            protected set
+            {
+                if (value != isLoaded)
+                {
+                    isLoaded = value;
+                    OnPropertyChanged("IsLoaded");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Populates the collection.
+        /// </summary>
+        public abstract void LoadItems();
     }
 }

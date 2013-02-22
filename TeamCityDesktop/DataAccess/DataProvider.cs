@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using TeamCityDesktop.Model;
 using TeamCityDesktop.ViewModel;
@@ -10,51 +11,79 @@ namespace TeamCityDesktop.DataAccess
 {
     internal class DataProvider : IDataProvider
     {
+        private readonly IWorker worker;
         private readonly TeamCityClient client;
 
-        public DataProvider(ServerCredentialsModel credentials)
+        public DataProvider(ServerCredentialsModel credentials, IWorker worker = null)
         {
+            this.worker = worker ?? new Worker() { IsAsync = true };
             client = credentials.CreateClient();
         }
 
         #region IDataProvider Members
 
-        public IEnumerable<ProjectViewModel> GetProjects()
+        public void GetProjects(Action<IEnumerable<ProjectViewModel>> callback)
         {
-            return client.AllProjects().Select(x => new ProjectViewModel(x, this));
+            if (callback == null) throw new ArgumentNullException("callback");
+            worker.QueueWork(delegate
+                {
+                    callback(client.AllProjects().Select(
+                        x => new ProjectViewModel(x, this)));
+                });
         }
 
-        public IEnumerable<BuildConfigViewModel> GetBuildConfigs()
+        public void GetBuildConfigs(Action<IEnumerable<BuildConfigViewModel>> callback)
         {
-            return client.AllBuildConfigs().Select(x => new BuildConfigViewModel(x, this));
+            if (callback == null) throw new ArgumentNullException("callback");
+            worker.QueueWork(delegate
+                {
+                    callback(client.AllBuildConfigs().Select(
+                        x => new BuildConfigViewModel(x, this)));
+                });
         }
 
-        public IEnumerable<BuildConfigViewModel> GetBuildConfigsByProject(Project project)
+        public void GetBuildConfigsByProject(Project project, Action<IEnumerable<BuildConfigViewModel>> callback)
         {
-            return client.BuildConfigsByProjectId(
-                project.Id).Select(x => new BuildConfigViewModel(x, this));
+            if (callback == null) throw new ArgumentNullException("callback");
+            worker.QueueWork(delegate
+                {
+                    callback(client.BuildConfigsByProjectId(project.Id).Select(
+                        x => new BuildConfigViewModel(x, this)));
+                });
         }
 
-        public IEnumerable<BuildViewModel> GetBuildsInBuildConfig(BuildConfig buildConfig)
+        public void GetBuildsInBuildConfig(BuildConfig buildConfig, Action<IEnumerable<BuildViewModel>> callback)
         {
-            BuildLocator locator = BuildLocator.WithDimensions(
-                BuildTypeLocator.WithId(buildConfig.Id));
-            return client.BuildsByBuildLocator(
-                locator).Select(x => new BuildViewModel(x, this));
+            if (callback == null) throw new ArgumentNullException("callback");
+            worker.QueueWork(delegate
+                {
+                    BuildLocator locator = BuildLocator.WithDimensions(
+                        BuildTypeLocator.WithId(buildConfig.Id));
+                    callback(client.BuildsByBuildLocator(locator).Select(
+                        x => new BuildViewModel(x, this)));
+                });
         }
 
-        public IEnumerable<ArtifactModel> GetArtifactsInBuild(Build build)
+        public void GetArtifactsInBuild(Build build, Action<IEnumerable<ArtifactModel>> callback)
         {
-            return client.ArtifactsByBuildConfigIdAndBuildNumber(
-                build.BuildTypeId, build.Number).Select(x => new ArtifactModel(x));
+            if (callback == null) throw new ArgumentNullException("callback");
+            worker.QueueWork(delegate
+                {
+                    callback(client.ArtifactsByBuildConfigIdAndBuildNumber(build.BuildTypeId, build.Number).Select(
+                        x => new ArtifactModel(x)));
+                });
         }
 
-        public BuildViewModel GetMostRecentBuildInBuildConfig(BuildConfig buildConfig)
+        public void GetMostRecentBuildInBuildConfig(BuildConfig buildConfig, Action<BuildViewModel> callback)
         {
-            BuildLocator locator = BuildLocator.WithDimensions(
-                BuildTypeLocator.WithId(buildConfig.Id), maxResults: 1);
-            return client.BuildsByBuildLocator(
-                locator).Select(x => new BuildViewModel(x, this)).FirstOrDefault();
+            if (callback == null) throw new ArgumentNullException("callback");
+            worker.QueueWork(delegate
+                {
+                    BuildLocator locator = BuildLocator.WithDimensions(
+                        BuildTypeLocator.WithId(buildConfig.Id), maxResults: 1);
+                    callback(client.BuildsByBuildLocator(locator).Select(
+                        x => new BuildViewModel(x, this)).FirstOrDefault());
+                });
         }
 
         #endregion

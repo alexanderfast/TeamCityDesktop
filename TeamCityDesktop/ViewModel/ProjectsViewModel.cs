@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Collections.Specialized;
+﻿using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using TeamCityDesktop.DataAccess;
+using TeamCityDesktop.Extensions;
 
 namespace TeamCityDesktop.ViewModel
 {
@@ -25,9 +25,14 @@ namespace TeamCityDesktop.ViewModel
             }
         }
 
-        public override IEnumerable<ProjectViewModel> LoadItems()
+        public override void LoadItems()
         {
-            return dataProvider.GetProjects();
+            IsLoading = true;
+            dataProvider.GetProjects(viewModels =>
+                {
+                    Collection.DispatcherAddRange(viewModels);
+                    IsLoading = false;
+                });
         }
 
         private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)

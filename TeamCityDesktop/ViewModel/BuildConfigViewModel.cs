@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using TeamCityDesktop.DataAccess;
+using TeamCityDesktop.Extensions;
+
 using TeamCitySharp.DomainEntities;
 
 namespace TeamCityDesktop.ViewModel
@@ -11,10 +13,10 @@ namespace TeamCityDesktop.ViewModel
         private readonly BuildConfig buildConfig;
         private readonly IDataProvider dataProvider;
         private bool isExpanded;
-        private bool loaded;
         private bool successful;
+        private readonly Worker worker = new Worker();
 
-        public BuildConfigViewModel(BuildConfig buildConfig, IDataProvider dataProvider) : base()
+        public BuildConfigViewModel(BuildConfig buildConfig, IDataProvider dataProvider)
         {
             if (buildConfig == null)
             {
@@ -23,14 +25,8 @@ namespace TeamCityDesktop.ViewModel
             this.buildConfig = buildConfig;
             this.dataProvider = dataProvider;
 
-            ThreadPool.QueueUserWorkItem(delegate
-                {
-                    var build = dataProvider.GetMostRecentBuildInBuildConfig(buildConfig);
-                    if (build != null)
-                    {
-                        IsSuccessful = build.IsSuccessful;
-                    }
-                });
+            dataProvider.GetMostRecentBuildInBuildConfig(buildConfig,
+                build => IsSuccessful = build != null && build.IsSuccessful);
         }
 
         public BuildConfig BuildConfig
@@ -39,7 +35,7 @@ namespace TeamCityDesktop.ViewModel
         }
 
         /// <summary>
-        /// A BuildConfig is successful if the latest build is successful.
+        /// Is successful if and only if the latest build is successful.
         /// </summary>
         public bool IsSuccessful
         {
@@ -61,15 +57,21 @@ namespace TeamCityDesktop.ViewModel
             {
                 if (value != isExpanded)
                 {
+                    LoadItems();
                     isExpanded = value;
                     OnPropertyChanged("IsExpanded");
                 }
             }
         }
 
-        public override IEnumerable<BuildViewModel> LoadItems()
+        public override void LoadItems()
         {
-            return dataProvider.GetBuildsInBuildConfig(buildConfig);
+            IsLoading = true;
+            dataProvider.GetBuildsInBuildConfig(buildConfig, viewModels =>
+                {
+                    Collection.DispatcherAddRange(viewModels);
+                    IsLoading = false;
+                });
         }
 
         //#region Nested type: SortByDate

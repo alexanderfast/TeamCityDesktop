@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TeamCityDesktop.Model;
 using TeamCityDesktop.ViewModel;
@@ -7,11 +8,11 @@ namespace TeamCityDesktop.DataAccess
 {
     public interface IDataProvider
     {
-        IEnumerable<ProjectViewModel> GetProjects();
-        IEnumerable<BuildConfigViewModel> GetBuildConfigs();
-        IEnumerable<BuildConfigViewModel> GetBuildConfigsByProject(Project project);
-        IEnumerable<BuildViewModel> GetBuildsInBuildConfig(BuildConfig buildConfig);
-        IEnumerable<ArtifactModel> GetArtifactsInBuild(Build build);
-        BuildViewModel GetMostRecentBuildInBuildConfig(BuildConfig buildConfig);
+        void GetProjects(Action<IEnumerable<ProjectViewModel>> callback);
+        void GetBuildConfigs(Action<IEnumerable<BuildConfigViewModel>> callback);
+        void GetBuildConfigsByProject(Project project, Action<IEnumerable<BuildConfigViewModel>> callback);
+        void GetBuildsInBuildConfig(BuildConfig buildConfig, Action<IEnumerable<BuildViewModel>> callback);
+        void GetArtifactsInBuild(Build build, Action<IEnumerable<ArtifactModel>> callback);
+        void GetMostRecentBuildInBuildConfig(BuildConfig buildConfig, Action<BuildViewModel> callback);
     }
 }

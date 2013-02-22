@@ -4,6 +4,8 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
 using TeamCityDesktop.DataAccess;
+using TeamCityDesktop.Extensions;
+
 using TeamCitySharp.DomainEntities;
 
 namespace TeamCityDesktop.ViewModel
@@ -56,15 +58,21 @@ namespace TeamCityDesktop.ViewModel
             {
                 if (value != isExpanded)
                 {
+                    LoadItems();
                     isExpanded = value;
                     OnPropertyChanged("IsExpanded");
                 }
             }
         }
 
-        public override IEnumerable<BuildConfigViewModel> LoadItems()
+        public override void LoadItems()
         {
-            return dataProvider.GetBuildConfigsByProject(project);
+            IsLoading = true;
+            dataProvider.GetBuildConfigsByProject(project, viewModels =>
+                {
+                    Collection.DispatcherAddRange(viewModels);
+                    IsLoading = false;
+                });
         }
 
         protected override void Dispose(bool disposing)

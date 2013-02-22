@@ -14,6 +14,7 @@ namespace TeamCityDesktop.ViewModel
                 throw new ArgumentNullException("dataProvider");
             }
             projects = new ProjectsViewModel(dataProvider);
+            projects.LoadItems();
         }
 
         public ProjectsViewModel Projects
