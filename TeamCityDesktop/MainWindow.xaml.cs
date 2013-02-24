@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -196,7 +198,7 @@ namespace TeamCityDesktop
         /// <summary>
         /// Downloads artifacts asynchronously while displaying a progress dialog.
         /// </summary>
-        private class InteractiveArtifactDownloader : ViewModelBase, IArtifactDownloader
+        private class InteractiveArtifactDownloader : IArtifactDownloader
         {
             private readonly TeamCityClient client;
 
@@ -215,12 +217,12 @@ namespace TeamCityDesktop
                 IEnumerable<ArtifactModel> artifacts)
             {
                 var downloader = new ArtifactDownloader(client, targetFolder, artifacts);
-                downloader.RunWorkerAsync();
                 new ProgressDialog(downloader)
                 {
                     Owner = Application.Current.MainWindow,
                     Title = "Downloading artifacts..."
-                }.ShowDialog();
+                }.Show();
+                ThreadPool.QueueUserWorkItem(delegate { downloader.RunSynchronously(); });
             }
             #endregion
         }

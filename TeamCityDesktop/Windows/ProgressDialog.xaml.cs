@@ -1,22 +1,23 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Windows;
+using TeamCityDesktop.Background;
 
 namespace TeamCityDesktop.Windows
 {
     public sealed partial class ProgressDialog : Window, INotifyPropertyChanged
     {
-        private readonly BackgroundWorker worker;
+        private readonly IBackgroundTask worker;
         private double progressPercentage;
         private object userState;
 
-        public ProgressDialog(BackgroundWorker worker = null)
+        public ProgressDialog(IBackgroundTask worker = null)
         {
             this.worker = worker;
             if (worker != null)
             {
                 worker.ProgressChanged += WorkerProgressChanged;
-                worker.RunWorkerCompleted += WorkerCompleted;
+                worker.TaskCompleted += WorkerCompleted;
             }
             DataContext = this;
             InitializeComponent();
@@ -57,10 +58,11 @@ namespace TeamCityDesktop.Windows
         protected override void OnClosed(EventArgs e)
         {
             worker.ProgressChanged -= WorkerProgressChanged;
-            worker.RunWorkerCompleted -= WorkerCompleted;
+            worker.TaskCompleted -= WorkerCompleted;
+            base.OnClosed(e);
         }
 
-        private void WorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        private void WorkerCompleted(object sender, TaskCompletedEventArgs eventArgs)
         {
             if (!Dispatcher.CheckAccess())
             {

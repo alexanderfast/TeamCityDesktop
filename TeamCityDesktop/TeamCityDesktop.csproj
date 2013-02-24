@@ -68,9 +68,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="ArtifactDownloader.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="ArtifactDownloader.cs" />
+    <Compile Include="BackgroundWorkerQueue.cs" />
     <Compile Include="Commands.cs" />
     <Compile Include="Controls\GifImage.cs" />
     <Compile Include="Controls\ServerOverview.xaml.cs">
@@ -84,8 +83,11 @@
     <Compile Include="DataAccess\Worker.cs" />
     <Compile Include="Extensions\ObservableCollectionExtensions.cs" />
     <Compile Include="IArtifactDownloader.xaml.cs" />
+    <Compile Include="Background\IBackgroundTask.cs" />
     <Compile Include="IFolderSelector.cs" />
     <Compile Include="Model\ArtifactModel.cs" />
+    <Compile Include="Background\TaskCompletedEventArgs.cs" />
+    <Compile Include="Background\TaskCompletedEventHandler.cs" />
     <Compile Include="ViewModel\ArtifactsViewModel.cs" />
     <Compile Include="ViewModel\ArtifactViewModel.cs" />
     <Compile Include="ViewModel\BuildViewModel.cs" />
