@@ -1,13 +1,15 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="ArtifactsViewModelDataTemplate.xaml"/>
-        <ResourceDictionary Source="BuildConfigViewModelDataTemplate.xaml"/>
-        <ResourceDictionary Source="BuildViewModelDataTemplate.xaml"/>
-        <ResourceDictionary Source="ExpanderCheckBox.xaml"/>
-        <ResourceDictionary Source="IsSuccessfulCheckBoxTemplate.xaml"/>
-        <ResourceDictionary Source="LoadingGifStyle.xaml"/>
-        <ResourceDictionary Source="ProjectsViewModelDataTemplate.xaml"/>
-        <ResourceDictionary Source="ProjectViewModelDataTemplate.xaml"/>
-    </ResourceDictionary.MergedDictionaries>
+	<ResourceDictionary.MergedDictionaries>
+		<ResourceDictionary Source="/Themes/ArtifactsViewModelDataTemplate.xaml" />
+		<ResourceDictionary Source="/Themes/BuildConfigViewModelDataTemplate.xaml" />
+		<ResourceDictionary Source="/Themes/BuildViewModelDataTemplate.xaml" />
+		<ResourceDictionary Source="/Themes/ExpanderCheckBox.xaml" />
+		<ResourceDictionary Source="/Themes/IsSuccessfulCheckBoxTemplate.xaml" />
+		<ResourceDictionary Source="/Themes/LoadingGifStyle.xaml" />
+		<ResourceDictionary Source="/Themes/LoginViewModelDataTemplate.xaml" />
+		<ResourceDictionary Source="/Themes/ProjectsViewModelDataTemplate.xaml" />
+		<ResourceDictionary Source="/Themes/ProjectViewModelDataTemplate.xaml" />
+		<ResourceDictionary Source="/Themes/ServerOverviewViewModelDataTemplate.xaml" />
+	</ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

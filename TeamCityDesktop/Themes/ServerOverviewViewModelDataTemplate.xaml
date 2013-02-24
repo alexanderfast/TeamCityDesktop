@@ -1,0 +1,16 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ViewModel="clr-namespace:TeamCityDesktop.ViewModel">
+	<DataTemplate DataType="{x:Type ViewModel:ServerOverviewViewModel}">
+		<Grid>
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition Width="*" />
+				<ColumnDefinition Width="*" />
+			</Grid.ColumnDefinitions>
+			<ContentPresenter Grid.Column="0"
+			                  Content="{Binding Projects}" />
+			<ContentPresenter Grid.Column="1"
+			                  Content="{Binding Artifacts}" />
+		</Grid>
+	</DataTemplate>
+</ResourceDictionary>

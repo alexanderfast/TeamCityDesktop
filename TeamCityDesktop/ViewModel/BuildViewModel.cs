@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using TeamCityDesktop.DataAccess;
+﻿using TeamCityDesktop.DataAccess;
 using TeamCityDesktop.Extensions;
 using TeamCityDesktop.Model;
 using TeamCitySharp.DomainEntities;

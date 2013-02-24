@@ -70,9 +70,6 @@
     </ApplicationDefinition>
     <Compile Include="Background\ArtifactDownloader.cs" />
     <Compile Include="Controls\GifImage.cs" />
-    <Compile Include="Controls\ServerOverview.xaml.cs">
-      <DependentUpon>ServerOverview.xaml</DependentUpon>
-    </Compile>
     <Compile Include="Converters\BoolToVisibility.cs" />
     <Compile Include="Converters\NullToVisibility.cs" />
     <Compile Include="DataAccess\DataProvider.cs" />
@@ -93,6 +90,7 @@
     <Compile Include="ViewModel\CommandViewModel.cs" />
     <Compile Include="DelegateCommand.cs" />
     <Compile Include="ViewModel\LoginViewModel.cs" />
+    <Compile Include="ViewModel\MainWindowViewModel.cs" />
     <Compile Include="ViewModel\WindowViewModelBase.cs" />
     <Compile Include="ViewModel\ProgressDialogViewModel.cs" />
     <Compile Include="ViewModel\ProjectsViewModel.cs" />
@@ -105,14 +103,6 @@
     <Compile Include="Windows\ProgressDialog.xaml.cs">
       <DependentUpon>ProgressDialog.xaml</DependentUpon>
     </Compile>
-    <Page Include="Controls\Login.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Controls\ServerOverview.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -120,9 +110,6 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Controls\Login.xaml.cs">
-      <DependentUpon>Login.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -160,11 +147,19 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="Themes\LoginViewModelDataTemplate.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Themes\ProjectsViewModelDataTemplate.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Themes\ProjectViewModelDataTemplate.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Themes\ServerOverviewViewModelDataTemplate.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

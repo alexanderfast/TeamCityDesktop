@@ -1,11 +1,10 @@
 ﻿<Window x:Class="TeamCityDesktop.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:TeamCityDesktop="clr-namespace:TeamCityDesktop"
         Title="TeamCity Desktop"
         Width="1280"
         WindowStartupLocation="CenterScreen"
         Background="#E3E9EF"
         Icon="Images/TeamCityLogoColor.png">
-    <ContentPresenter Content="{Binding Activity, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=TeamCityDesktop:MainWindow}}" />
+    <ContentPresenter Content="{Binding Activity}" />
 </Window>
