@@ -25,10 +25,11 @@
 		           LastChildFill="True">
 			<Button HorizontalAlignment="Center"
 			        DockPanel.Dock="Bottom"
-			        Content="_Login"
 			        Padding="14 4"
-			        Command="{x:Static TeamCityDesktop:Commands.Connect}" />
-			<StackPanel VerticalAlignment="Center">
+			        Content="{Binding ConnectCommand.CommandName}"
+			        Command="{Binding ConnectCommand.Command}" />
+			<StackPanel DataContext="{Binding ServerCredentials}"
+                        VerticalAlignment="Center">
 				<TextBlock Text="Log in to TeamCity"
 				           FontSize="24"
 				           FontWeight="DemiBold" />

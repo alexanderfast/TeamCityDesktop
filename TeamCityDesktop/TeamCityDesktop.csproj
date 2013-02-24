@@ -69,7 +69,6 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Background\ArtifactDownloader.cs" />
-    <Compile Include="Commands.cs" />
     <Compile Include="Controls\GifImage.cs" />
     <Compile Include="Controls\ServerOverview.xaml.cs">
       <DependentUpon>ServerOverview.xaml</DependentUpon>
@@ -93,6 +92,7 @@
     <Compile Include="ViewModel\AsyncCollectionViewModel.cs" />
     <Compile Include="ViewModel\CommandViewModel.cs" />
     <Compile Include="DelegateCommand.cs" />
+    <Compile Include="ViewModel\LoginViewModel.cs" />
     <Compile Include="ViewModel\WindowViewModelBase.cs" />
     <Compile Include="ViewModel\ProgressDialogViewModel.cs" />
     <Compile Include="ViewModel\ProjectsViewModel.cs" />

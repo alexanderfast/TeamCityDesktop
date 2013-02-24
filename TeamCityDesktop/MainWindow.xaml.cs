@@ -2,11 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
-using System.Windows.Input;
 using TeamCityDesktop.Background;
 using TeamCityDesktop.Controls;
 using TeamCityDesktop.DataAccess;
@@ -21,12 +18,10 @@ namespace TeamCityDesktop
     public sealed partial class MainWindow : Window, INotifyPropertyChanged
     {
         private const string ServerFile = "Servers.xml";
+        private readonly IFolderSelector folderSelector = new FolderSelector();
+        private readonly Worker worker = new Worker {IsAsync = true};
         private object activity;
-        private IDataProvider dataProvider;
-        private ServerCredentialsModel serverCredentials;
-        private ServerOverviewViewModel serverOverviewViewModel;
         private IArtifactDownloader artifactDownloader;
-        private IFolderSelector folderSelector = new FolderSelector();
 
         public MainWindow()
         {
@@ -43,14 +38,15 @@ namespace TeamCityDesktop
                         Url = "teamcity.codebetter.com",
                         Guest = true
                     };
-                var login = new Login(newCredentials);
-                activity = login;
+                activity = new Login
+                    {
+                        DataContext = new LoginViewModel(newCredentials, ConnectExecuted)
+                    };
             }
             else
             {
                 ShowServerOverview(credentials[0]);
             }
-
             InitializeComponent();
         }
 
@@ -71,37 +67,6 @@ namespace TeamCityDesktop
             }
         }
 
-        public ServerOverviewViewModel ServerOverviewViewModel
-        {
-            get { return serverOverviewViewModel; }
-            set
-            {
-                if (value != serverOverviewViewModel)
-                {
-                    if (serverOverviewViewModel != null)
-                    {
-                        serverOverviewViewModel.Projects.PropertyChanged -=
-                            ProjectsPropertyChanged;
-                    }
-                    serverOverviewViewModel = value;
-                    if (serverOverviewViewModel != null)
-                    {
-                        serverOverviewViewModel.Projects.PropertyChanged +=
-                            ProjectsPropertyChanged;
-                    }
-                    if (PropertyChanged != null)
-                    {
-                        PropertyChanged(this, new PropertyChangedEventArgs("ServerOverviewViewModel"));
-                    }
-                }
-            }
-        }
-
-        private void ProjectsPropertyChanged(object sender, PropertyChangedEventArgs e)
-        {
-            //throw new NotImplementedException();
-        }
-
         #region INotifyPropertyChanged Members
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -110,31 +75,18 @@ namespace TeamCityDesktop
 
         private void ShowServerOverview(ServerCredentialsModel credentials)
         {
-            serverCredentials = credentials;
-            if (serverOverviewViewModel == null)
-            {
-                var worker = new Worker {IsAsync = true};
-                artifactDownloader = new InteractiveArtifactDownloader(
-                    credentials.CreateClient(), worker);
-                ServerOverviewViewModel = new ServerOverviewViewModel(
-                    new DataProvider(
-                        credentials.CreateClient(),
-                        worker),
-                    artifactDownloader,
-                    folderSelector);
-            }
-            Activity = new ServerOverview { DataContext = serverOverviewViewModel };
+            artifactDownloader = new InteractiveArtifactDownloader(
+                credentials.CreateClient(), worker);
+            var overviewViewModel = new ServerOverviewViewModel(
+                new DataProvider(
+                    credentials.CreateClient(),
+                    worker),
+                artifactDownloader,
+                folderSelector);
+            Activity = new ServerOverview {DataContext = overviewViewModel};
         }
 
-        private void ConnectCanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            var login = activity as Login;
-            e.CanExecute = login == null
-                ? false
-                : login.ServerCredentials.IsValid();
-        }
-
-        private void ConnectExecuted(object sender, ExecutedRoutedEventArgs e)
+        private void ConnectExecuted()
         {
             var login = activity as Login;
             if (login != null)
@@ -142,15 +94,18 @@ namespace TeamCityDesktop
                 var serializer = new Serializer<List<ServerCredentialsModel>>();
 
                 // save the credential info
-                List<ServerCredentialsModel> credentials = File.Exists(ServerFile)
+                var credentials = File.Exists(ServerFile)
                     ? serializer.Load(ServerFile)
                     : new List<ServerCredentialsModel>();
-                credentials.Add(login.ServerCredentials);
+                var model = ((LoginViewModel)login.DataContext).ServerCredentials;
+                credentials.Add(model);
                 serializer.Save(credentials, ServerFile);
 
-                ShowServerOverview(login.ServerCredentials);
+                ShowServerOverview(model);
             }
         }
+
+        #region Nested type: FolderSelector
 
         /// <summary>
         /// Wraps the Windows Forms dialog to let the user select a folder.
@@ -197,6 +152,10 @@ namespace TeamCityDesktop
             #endregion
         }
 
+        #endregion
+
+        #region Nested type: InteractiveArtifactDownloader
+
         /// <summary>
         /// Downloads artifacts asynchronously while displaying a progress dialog.
         /// </summary>
@@ -211,27 +170,35 @@ namespace TeamCityDesktop
                 {
                     throw new ArgumentNullException("client");
                 }
+                if (worker == null)
+                {
+                    throw new ArgumentNullException("worker");
+                }
                 this.client = client;
                 this.worker = worker;
             }
 
             #region Implementation of IArtifactDownloader
+
             public void DownloadAsync(
                 string targetFolder,
                 IEnumerable<ArtifactModel> artifacts)
             {
                 var downloader = new ArtifactDownloader(client, targetFolder, artifacts);
-                new ProgressDialog()
-                {
-                    Owner = Application.Current.MainWindow,
-                    DataContext = new ProgressDialogViewModel(downloader)
+                new ProgressDialog
                     {
-                        Title = "Downloading artifacts...",
-                    }
-                }.Show();
+                        Owner = Application.Current.MainWindow,
+                        DataContext = new ProgressDialogViewModel(downloader)
+                            {
+                                Title = "Downloading artifacts...",
+                            }
+                    }.Show();
                 worker.QueueWork(delegate { downloader.RunSynchronously(); });
             }
+
             #endregion
         }
+
+        #endregion
     }
 }
