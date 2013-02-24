@@ -6,6 +6,6 @@ namespace TeamCityDesktop
 {
     public interface IArtifactDownloader
     {
-        void DownloadAsync(IEnumerable<ArtifactModel> artifacts);
+        void DownloadAsync(string targetFolder, IEnumerable<ArtifactModel> artifacts);
     }
 }

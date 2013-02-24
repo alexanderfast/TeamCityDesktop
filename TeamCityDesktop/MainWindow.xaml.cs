@@ -23,6 +23,7 @@ namespace TeamCityDesktop
         private ServerCredentialsModel serverCredentials;
         private ServerOverviewViewModel serverOverviewViewModel;
         private IArtifactDownloader artifactDownloader;
+        private IFolderSelector folderSelector = new FolderSelector();
 
         public MainWindow()
         {
@@ -115,7 +116,8 @@ namespace TeamCityDesktop
                     new DataProvider(
                         credentials.CreateClient(),
                         new Worker { IsAsync = true }),
-                    artifactDownloader);
+                    artifactDownloader,
+                    folderSelector);
             }
             Activity = new ServerOverview { DataContext = serverOverviewViewModel };
         }
@@ -147,33 +149,78 @@ namespace TeamCityDesktop
         }
 
         /// <summary>
-        /// Shows a browser dialog that lets the user select a destination
-        /// folder, then downloads the artifacts asynchronously while displaying
-        /// a progress dialog.
+        /// Wraps the Windows Forms dialog to let the user select a folder.
         /// </summary>
-        private class InteractiveArtifactDownloader : IArtifactDownloader
+        private class FolderSelector : ViewModelBase, IFolderSelector
+        {
+            private readonly CommandViewModel command;
+            private string selectedFolder;
+
+            public FolderSelector()
+            {
+                var delegateCommand = new DelegateCommand(() =>
+                    {
+                        var dialog = new FolderBrowserDialog {SelectedPath = selectedFolder};
+                        if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                        {
+                            SelectedFolder = dialog.SelectedPath;
+                        }
+                    });
+                command = new CommandViewModel("Select Folder", delegateCommand);
+                selectedFolder = Environment.CurrentDirectory;
+            }
+
+            #region Implementation of IFolderSelector
+
+            public CommandViewModel SelectFolder
+            {
+                get { return command; }
+            }
+
+            public string SelectedFolder
+            {
+                get { return selectedFolder; }
+                set
+                {
+                    if (value != selectedFolder)
+                    {
+                        selectedFolder = value;
+                        OnPropertyChanged("SelectedFolder");
+                    }
+                }
+            }
+
+            #endregion
+        }
+
+        /// <summary>
+        /// Downloads artifacts asynchronously while displaying a progress dialog.
+        /// </summary>
+        private class InteractiveArtifactDownloader : ViewModelBase, IArtifactDownloader
         {
             private readonly TeamCityClient client;
 
             public InteractiveArtifactDownloader(TeamCityClient client)
             {
+                if (client == null)
+                {
+                    throw new ArgumentNullException("client");
+                }
                 this.client = client;
             }
 
             #region Implementation of IArtifactDownloader
-            public void DownloadAsync(IEnumerable<ArtifactModel> artifacts)
+            public void DownloadAsync(
+                string targetFolder,
+                IEnumerable<ArtifactModel> artifacts)
             {
-                var dialog = new FolderBrowserDialog();
-                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                var downloader = new ArtifactDownloader(client, targetFolder, artifacts);
+                downloader.RunWorkerAsync();
+                new ProgressDialog(downloader)
                 {
-                    var downloader = new ArtifactDownloader(client, dialog.SelectedPath, artifacts);
-                    downloader.RunWorkerAsync();
-                    new ProgressDialog(downloader)
-                    {
-                        Owner = Application.Current.MainWindow,
-                        Title = "Downloading artifacts..."
-                    }.ShowDialog();
-                }
+                    Owner = Application.Current.MainWindow,
+                    Title = "Downloading artifacts..."
+                }.ShowDialog();
             }
             #endregion
         }

@@ -8,12 +8,15 @@ namespace TeamCityDesktop.ViewModel
     public class ServerOverviewViewModel : ViewModelBase
     {
         private readonly ProjectsViewModel projects;
+        private readonly IArtifactDownloader downloader;
+        private readonly IFolderSelector folderSelector;
         private ArtifactsViewModel artifacts;
         private bool disposed;
-        private IArtifactDownloader downloader;
 
         public ServerOverviewViewModel(
-            IDataProvider dataProvider, IArtifactDownloader downloader)
+            IDataProvider dataProvider,
+            IArtifactDownloader downloader,
+            IFolderSelector folderSelector = null)
         {
             if (dataProvider == null)
             {
@@ -27,6 +30,7 @@ namespace TeamCityDesktop.ViewModel
             projects.PropertyChanged += ProjectPropertyChanged;
             projects.LoadItems();
             this.downloader = downloader;
+            this.folderSelector = folderSelector;
         }
 
         public ProjectsViewModel Projects
@@ -63,7 +67,8 @@ namespace TeamCityDesktop.ViewModel
             if ("SelectedBuild".Equals(e.PropertyName))
             {
                 Artifacts = new ArtifactsViewModel(
-                    downloader, projects.SelectedBuild);
+                    downloader, folderSelector, projects.SelectedBuild);
+                Artifacts.LoadItems();
             }
         }
     }

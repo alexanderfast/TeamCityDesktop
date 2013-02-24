@@ -1,28 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
-using System.Windows.Input;
-
 using TeamCityDesktop.Model;
 
 namespace TeamCityDesktop.ViewModel
 {
-    public class ArtifactsViewModel : ViewModelBase
+    public class ArtifactsViewModel : AsyncCollectionViewModel<ArtifactViewModel>
     {
-        private readonly ObservableCollection<ArtifactViewModel> artifacts =
-            new ObservableCollection<ArtifactViewModel>();
-
-        private readonly IArtifactDownloader downloader;
         private readonly BuildViewModel buildViewModel;
+        private readonly DelegateCommand downloadAll;
+        private readonly DelegateCommand downloadSelected;
+        private readonly IArtifactDownloader downloader;
+        private readonly IFolderSelector folderSelector;
         private bool disposed;
-        private DelegateCommand downloadSelected;
-        private DelegateCommand downloadAll;
 
         public ArtifactsViewModel(
-            IArtifactDownloader downloader, BuildViewModel buildViewModel)
+            IArtifactDownloader downloader,
+            IFolderSelector folderSelector,
+            BuildViewModel buildViewModel)
         {
             if (downloader == null)
             {
@@ -33,25 +31,35 @@ namespace TeamCityDesktop.ViewModel
                 throw new ArgumentNullException("buildViewModel");
             }
             this.downloader = downloader;
+            this.folderSelector = folderSelector;
             this.buildViewModel = buildViewModel;
-            buildViewModel.LoadItems();
-            buildViewModel.Collection.CollectionChanged +=
-                BuildViewModelCollectionChanged;
 
             downloadSelected = new DelegateCommand(
-                    DownloadSelected,
-                    () => artifacts.Count(x => x.IsSelected) > 0);
+                DownloadSelected,
+                () => Collection.Count(x => x.IsSelected) > 0);
 
             downloadAll = new DelegateCommand(
-                    DownloadAll,
-                    () => artifacts.Count > 0);
+                DownloadAll,
+                () => Collection.Count > 0);
 
             Commands = new[]
-            {
-                new CommandViewModel("Download Selected", downloadSelected),
-                new CommandViewModel("Download All", downloadAll)
-            };
+                {
+                    new CommandViewModel("Download Selected", downloadSelected),
+                    new CommandViewModel("Download All", downloadAll)
+                };
         }
+
+        public BuildViewModel Build
+        {
+            get { return buildViewModel; }
+        }
+
+        public IFolderSelector FolderSelector
+        {
+            get { return folderSelector; }
+        }
+
+        public IEnumerable<CommandViewModel> Commands { get; private set; }
 
         protected override void Dispose(bool disposing)
         {
@@ -60,25 +68,13 @@ namespace TeamCityDesktop.ViewModel
                 if (!disposed)
                 {
                     disposed = true;
-                    foreach (var viewModel in artifacts)
+                    foreach (ArtifactViewModel viewModel in Collection)
                     {
                         viewModel.PropertyChanged -= ArtifactViewModelPropertyChanged;
                     }
-                    artifacts.Clear();
+                    Collection.Clear();
                 }
             }
-        }
-
-        public BuildViewModel Build
-        {
-            get { return buildViewModel; }
-        }
-
-        public IEnumerable<CommandViewModel> Commands { get; private set; }
-
-        public ObservableCollection<ArtifactViewModel> Artifacts
-        {
-            get { return artifacts; }
         }
 
         private void BuildViewModelCollectionChanged(
@@ -86,15 +82,20 @@ namespace TeamCityDesktop.ViewModel
         {
             if (e.NewItems != null)
             {
-                foreach (var model in e.NewItems.OfType<ArtifactModel>())
+                foreach (ArtifactModel model in e.NewItems.OfType<ArtifactModel>())
                 {
-                    var viewModel = new ArtifactViewModel(model);
-                    viewModel.PropertyChanged += ArtifactViewModelPropertyChanged;
-                    artifacts.Add(viewModel);
+                    AddArtifact(model);
                 }
                 downloadAll.OnCanExecuteChanged();
             }
             // TODO doesnt support removal, but BuildViewModel never removes artifacts
+        }
+
+        private void AddArtifact(ArtifactModel model)
+        {
+            var viewModel = new ArtifactViewModel(model);
+            viewModel.PropertyChanged += ArtifactViewModelPropertyChanged;
+            Collection.Add(viewModel);
         }
 
         private void ArtifactViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -105,14 +106,53 @@ namespace TeamCityDesktop.ViewModel
             }
         }
 
+        /// <summary>
+        /// Gets the folder where downloaded artifacts should be placed.
+        /// </summary>
+        private string GetDownloadFolder()
+        {
+            if (folderSelector == null || !Directory.Exists(folderSelector.SelectedFolder))
+            {
+                return Environment.CurrentDirectory;
+            }
+            return folderSelector.SelectedFolder;
+        }
+
         private void DownloadAll()
         {
-            downloader.DownloadAsync(artifacts.Select(x => x.Model));
+            downloader.DownloadAsync(
+                GetDownloadFolder(),
+                Collection.Select(x => x.Model));
         }
 
         private void DownloadSelected()
         {
-            downloader.DownloadAsync(artifacts.Where(x => x.IsSelected).Select(x => x.Model));
+            downloader.DownloadAsync(
+                GetDownloadFolder(),
+                Collection.Where(x => x.IsSelected).Select(x => x.Model));
         }
+
+        #region Overrides of AsyncCollectionViewModel<ArtifactViewModel>
+
+        public override void LoadItems()
+        {
+            if (IsLoaded)
+            {
+                return;
+            }
+
+            // handle items already added
+            foreach (ArtifactModel model in buildViewModel.Collection)
+            {
+                AddArtifact(model);
+            }
+
+            // listen to changes and request loading
+            buildViewModel.Collection.CollectionChanged +=
+                BuildViewModelCollectionChanged;
+            buildViewModel.LoadItems();
+        }
+
+        #endregion
     }
 }

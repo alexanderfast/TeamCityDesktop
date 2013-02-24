@@ -1,47 +1,53 @@
-﻿<ResourceDictionary
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:Controls="clr-namespace:TeamCityDesktop.Controls"
-    xmlns:ViewModel="clr-namespace:TeamCityDesktop.ViewModel">
-    <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="Converters.xaml" />
-        <ResourceDictionary Source="LoadingGifStyle.xaml" />
-    </ResourceDictionary.MergedDictionaries>
-    <DataTemplate DataType="{x:Type ViewModel:ArtifactsViewModel}">
-        <Grid>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <Controls:GifImage Style="{StaticResource LoadingGif}"
-                               Visibility="{Binding Build.IsLoading, Converter={StaticResource VisibleIfTrue}}"/>
-            <ListBox Visibility="{Binding Build.IsLoading, Converter={StaticResource VisibleIfFalse}}"
-                     ItemsSource="{Binding Artifacts}"
-                     SelectionMode="Multiple">
-                <ListBox.Resources>
-                    <Style TargetType="{x:Type ListBoxItem}">
-                      <Setter Property="IsSelected"
-                              Value="{Binding IsSelected, Mode=TwoWay}" />
-                    </Style>
-                </ListBox.Resources>
-                <ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <TextBlock Text="{Binding Path}"/>
-                    </DataTemplate>
-                </ListBox.ItemTemplate>
-            </ListBox>
-            <ItemsControl Grid.Row="1"
-                          Margin="2"
-                          ItemsSource="{Binding Commands}">
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <Button Command="{Binding Command}"
-                                Content="{Binding CommandName}"
-                                HorizontalAlignment="Stretch"
-                                Margin="2"/>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-            </ItemsControl>
-        </Grid>
-    </DataTemplate>
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:Controls="clr-namespace:TeamCityDesktop.Controls"
+                    xmlns:ViewModel="clr-namespace:TeamCityDesktop.ViewModel">
+	<ResourceDictionary.MergedDictionaries>
+		<ResourceDictionary Source="Converters.xaml" />
+		<ResourceDictionary Source="LoadingGifStyle.xaml" />
+	</ResourceDictionary.MergedDictionaries>
+	<DataTemplate DataType="{x:Type ViewModel:ArtifactsViewModel}">
+		<Grid>
+			<Grid.RowDefinitions>
+				<RowDefinition Height="*" />
+				<RowDefinition Height="Auto" />
+			</Grid.RowDefinitions>
+			<Controls:GifImage Style="{StaticResource LoadingGif}"
+			                   Visibility="{Binding Build.IsLoading, Converter={StaticResource VisibleIfTrue}}" />
+			<ListBox Visibility="{Binding Build.IsLoading, Converter={StaticResource VisibleIfFalse}}"
+			         ItemsSource="{Binding Collection}"
+			         SelectionMode="Multiple">
+				<ListBox.Resources>
+					<Style TargetType="{x:Type ListBoxItem}">
+						<Setter Property="IsSelected"
+						        Value="{Binding IsSelected, Mode=TwoWay}" />
+					</Style>
+				</ListBox.Resources>
+				<ListBox.ItemTemplate>
+					<DataTemplate>
+						<TextBlock Text="{Binding Path}" />
+					</DataTemplate>
+				</ListBox.ItemTemplate>
+			</ListBox>
+			<StackPanel Grid.Row="1"
+			            Margin="2">
+				<StackPanel.Resources>
+					<DataTemplate DataType="{x:Type ViewModel:CommandViewModel}">
+						<Button Margin="2"
+						        Command="{Binding Command}"
+						        Content="{Binding CommandName}" />
+					</DataTemplate>
+				</StackPanel.Resources>
+				<DockPanel LastChildFill="True"
+				           Visibility="{Binding FolderSelector, Converter={StaticResource VisibleIfNotNull}}">
+					<ContentControl DockPanel.Dock="Right"
+					                Content="{Binding FolderSelector.SelectFolder}" />
+					<TextBox Text="{Binding FolderSelector.SelectedFolder}"
+                             VerticalAlignment="Center"
+                             VerticalContentAlignment="Center"/>
+				</DockPanel>
+				<ItemsControl ItemsSource="{Binding Commands}" />
+			</StackPanel>
+		</Grid>
+	</DataTemplate>
 </ResourceDictionary>
