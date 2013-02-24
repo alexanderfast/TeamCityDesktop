@@ -1,90 +1,59 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Windows;
-using TeamCityDesktop.Background;
+using TeamCityDesktop.ViewModel;
 
 namespace TeamCityDesktop.Windows
 {
-    public sealed partial class ProgressDialog : Window, INotifyPropertyChanged
+    public sealed partial class ProgressDialog : Window
     {
-        private readonly IBackgroundTask worker;
-        private double progressPercentage;
-        private object userState;
-
-        public ProgressDialog(IBackgroundTask worker = null)
+        public ProgressDialog()
         {
-            this.worker = worker;
-            if (worker != null)
-            {
-                worker.ProgressChanged += WorkerProgressChanged;
-                worker.TaskCompleted += WorkerCompleted;
-            }
-            DataContext = this;
+            DataContextChanged += OnDataContextChanged;
             InitializeComponent();
         }
 
-        public double ProgressPercentage
+        private void OnDataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            get { return progressPercentage; }
-            set
+            var viewModel = e.OldValue as ProgressDialogViewModel;
+            if (viewModel != null)
             {
-                if (value != progressPercentage)
-                {
-                    progressPercentage = value;
-                    OnPropertyChanged("ProgressPercentage");
-                }
+                viewModel.RequestClose -= HandleCloseRequest;
+                viewModel.Dispose();
+            }
+            viewModel = e.NewValue as ProgressDialogViewModel;
+            if (viewModel != null)
+            {
+                viewModel.RequestClose += HandleCloseRequest;
             }
         }
 
-        public object UserState
-        {
-            get { return userState; }
-            set
-            {
-                if (value != userState)
-                {
-                    userState = value;
-                    OnPropertyChanged("UserState");
-                }
-            }
-        }
-
-        #region INotifyPropertyChanged Members
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        #endregion
-
-        protected override void OnClosed(EventArgs e)
-        {
-            worker.ProgressChanged -= WorkerProgressChanged;
-            worker.TaskCompleted -= WorkerCompleted;
-            base.OnClosed(e);
-        }
-
-        private void WorkerCompleted(object sender, TaskCompletedEventArgs eventArgs)
+        private void HandleCloseRequest(object sender, EventArgs e)
         {
             if (!Dispatcher.CheckAccess())
             {
-                Dispatcher.BeginInvoke((Action)Close);
+                Dispatcher.BeginInvoke((Action)(() => HandleCloseRequest(sender, e)));
             }
             else
             {
+                DataContext = null;
                 Close();
             }
         }
 
-        private void WorkerProgressChanged(object sender, ProgressChangedEventArgs e)
+        protected override void OnClosing(CancelEventArgs e)
         {
-            ProgressPercentage = e.ProgressPercentage;
-            UserState = e.UserState;
-        }
-
-        private void OnPropertyChanged(string property)
-        {
-            if (PropertyChanged != null)
+            var viewModel = DataContext as ProgressDialogViewModel;
+            if (viewModel == null)
             {
-                PropertyChanged(this, new PropertyChangedEventArgs(property));
+                // without a view model close as normal
+                base.OnClosing(e);
+            }
+            else
+            {
+                // otherwise request the view model to cancel and abort closing
+                viewModel.CancelTask();
+                e.Cancel = true;
             }
         }
     }

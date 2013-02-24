@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using TeamCityDesktop.Background;
 using TeamCityDesktop.Model;
-using TeamCityDesktop.ViewModel;
 using TeamCitySharp;
 
-namespace TeamCityDesktop
+namespace TeamCityDesktop.Background
 {
     public class ArtifactDownloader : IBackgroundTask
     {

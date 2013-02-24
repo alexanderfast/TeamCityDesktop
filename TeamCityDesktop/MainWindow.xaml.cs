@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
+using TeamCityDesktop.Background;
 using TeamCityDesktop.Controls;
 using TeamCityDesktop.DataAccess;
 using TeamCityDesktop.Model;
@@ -112,12 +113,13 @@ namespace TeamCityDesktop
             serverCredentials = credentials;
             if (serverOverviewViewModel == null)
             {
+                var worker = new Worker {IsAsync = true};
                 artifactDownloader = new InteractiveArtifactDownloader(
-                    credentials.CreateClient());
+                    credentials.CreateClient(), worker);
                 ServerOverviewViewModel = new ServerOverviewViewModel(
                     new DataProvider(
                         credentials.CreateClient(),
-                        new Worker { IsAsync = true }),
+                        worker),
                     artifactDownloader,
                     folderSelector);
             }
@@ -201,14 +203,16 @@ namespace TeamCityDesktop
         private class InteractiveArtifactDownloader : IArtifactDownloader
         {
             private readonly TeamCityClient client;
+            private readonly Worker worker;
 
-            public InteractiveArtifactDownloader(TeamCityClient client)
+            public InteractiveArtifactDownloader(TeamCityClient client, Worker worker)
             {
                 if (client == null)
                 {
                     throw new ArgumentNullException("client");
                 }
                 this.client = client;
+                this.worker = worker;
             }
 
             #region Implementation of IArtifactDownloader
@@ -217,12 +221,15 @@ namespace TeamCityDesktop
                 IEnumerable<ArtifactModel> artifacts)
             {
                 var downloader = new ArtifactDownloader(client, targetFolder, artifacts);
-                new ProgressDialog(downloader)
+                new ProgressDialog()
                 {
                     Owner = Application.Current.MainWindow,
-                    Title = "Downloading artifacts..."
+                    DataContext = new ProgressDialogViewModel(downloader)
+                    {
+                        Title = "Downloading artifacts...",
+                    }
                 }.Show();
-                ThreadPool.QueueUserWorkItem(delegate { downloader.RunSynchronously(); });
+                worker.QueueWork(delegate { downloader.RunSynchronously(); });
             }
             #endregion
         }
